@@ -1,0 +1,166 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+model User {
+  id         String       @id @default(cuid())
+  email      String       @unique
+  password   String
+  role       Role         @default(ADMIN)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  MediaAsset MediaAsset[]
+}
+
+enum Role {
+  ADMIN
+}
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  type        MediaType
+  url         String
+  key         String?
+  alt         String?
+  width       Int?
+  height      Int?
+  sortOrder   Int       @default(0)
+  published   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id])
+  // NEW (back-relation)
+  announcementLinks AnnouncementMedia[]  
+  galleryItem   GalleryItem?
+  @@index([type, sortOrder])
+}
+
+model GalleryItem {
+  // One global gallery page (simple). If you ever need multiple galleries,
+  // add a Gallery table and reference it here.
+  mediaAssetId String  @id
+  sortOrder    Int     @default(0)
+  published    Boolean @default(true)
+
+  asset        MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@index([sortOrder])
+}
+
+enum MediaType {
+  HERO
+  MENU
+  ANNOUNCEMENT
+}
+
+model AnnouncementMedia {
+  announcementId String
+  mediaAssetId   String
+  sortOrder      Int     @default(0)
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  asset        MediaAsset   @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, mediaAssetId])
+  @@index([announcementId, sortOrder])
+}
+
+
+model Announcement {
+  id        String   @id @default(cuid())
+  date      DateTime
+  title     String
+  desc      String?
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // NEW
+  media     AnnouncementMedia[]
+
+  @@index([date, published])
+}
+
+model Closure {
+  id   String   @id @default(cuid())
+  date DateTime
+  slot Slot
+  note String?
+
+  @@unique([date, slot])
+  @@index([date])
+}
+
+enum Slot {
+  ALL
+  LUNCH
+  DINNER
+}
+
+model RecurringClosure {
+  id        String   @id @default(cuid())
+  // Monday=0 … Sunday=6  (matches your calendar which uses Mon=0)
+  weekday   Int
+  slot      Slot
+  note      String?
+
+  // first date this rule applies (inclusive). optional -> starts today
+  startsOn  DateTime?
+  // last date this rule applies (inclusive). optional -> default +5y in code
+  endsOn    DateTime?
+
+  // optional: allow “every N weeks” (default 1)
+  interval  Int      @default(1)
+}
+
+model BusinessHours {
+  id            String  @id @default(cuid())
+  // Monday=0 … Sunday=6 (matches your calendar logic)
+  weekday       Int     // 0..6
+
+  // minutes since midnight; null = closed for that slot
+  lunchStartMin  Int?   // e.g., 12:00 -> 720
+  lunchEndMin    Int?
+  dinnerStartMin Int?
+  dinnerEndMin   Int?
+  displayText    String? @db.Text
+
+  // optional: soft-closed whole day (UI convenience)
+  closedAllDay  Boolean @default(false)
+
+  // optional: for future-dated changes; null means current forever
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+
+  @@unique([weekday, effectiveFrom])
+}
+
+model Hit {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  path       String
+  referrer   String?
+  utmSource  String?
+  utmMedium  String?
+  utmCampaign String?
+  userAgent  String?
+  browser    String?
+  os         String?
+  ipHash     String?   // store hash, not raw IP (privacy)
+  city       String?
+  country    String?
+  sessionId  String?
+  isBot      Boolean   @default(false)
+
+  @@index([createdAt])
+  @@index([path, createdAt])
+  @@index([city, country])
+}

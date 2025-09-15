@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'LorangeRose';
+    src:  url('/src/assets/fonts/CinzelDecorative-Black.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+@font-face {
+    font-family: 'LorangeRose';
+    src: url('/src/assets/fonts/CinzelDecorative-Bold.ttf') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'LorangeRose';
+    src: url('/src/assets/fonts/CinzelDecorative-Regular.ttf') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+  font-family: 'edo';
+  src:  url('/src/assets/fonts/edo.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+.font-legacy { font-family: 'LorangeRose', serif; }
+/* Beige background for body to match brand */
+:root { color-scheme: light; }
+body { background: #F7EBD9; }
+
+/* --- Text link with animated underline (beige / orange variants) --- */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 3px;
+  transition: background-size .25s ease, color .2s ease, transform .2s ease;
+}
+.link-underline-beige { color: #F7EBD9; }
+.link-underline-beige:hover { background-image: linear-gradient(#F7EBD9, #F7EBD9); background-size: 100% 3px; }
+.link-underline-orange { color: #FFB96B; }
+.link-underline-orange:hover { background-image: linear-gradient(#FFB96B, #FFB96B); background-size: 100% 3px; }
+
+/* --- Chunky buttons (square-ish Gen-Z vibe) --- */
+.btn-chunky {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: .9rem 1.25rem; border-radius: .8rem; border: 2px solid #4C0C27;
+  font-weight: 700; letter-spacing: .2px; text-transform: none;
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
+}
+.btn-chunky:active { transform: translateY(1px); }
+.btn-red {
+  background: linear-gradient(#d32129, #b91921);
+  color: #F7EBD9; box-shadow: 0 10px 24px rgba(200,29,37,.35);
+}
+.btn-red:hover { box-shadow: 0 16px 36px rgba(200,29,37,.45); transform: translateY(-1px); }
+.btn-ink {
+  background: transparent; color: #0B0B0B; 
+}
+.btn-ink:hover { background: #0B0B0B; color: #F7EBD9; }
+
+/* --- Jelly hover (subtle squish) --- */
+@keyframes jelly {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06, .96); }
+  60% { transform: scale(.98, 1.04); }
+  100% { transform: scale(1); }
+}
+.hover-jelly:hover { animation: jelly .35s both; }
+
+/* --- Reveal (you already had this; keeping for completeness) --- */
+@keyframes fadeOnly { from { opacity: 0 } to { opacity: 1 } }
+[data-reveal], [data-reveal-late] { opacity: 0 }
+.reveal-in { animation: fadeOnly .6s ease-out forwards }
+
+/* Staggered list items: hidden by default, play when parent gets .is-visible */
+.fade-up { opacity: 0; transform: translateY(12px); }
+@keyframes fadeUp { to { opacity: 1; transform: none } }
+.is-visible > .fade-up { animation: fadeUp .55s cubic-bezier(.2,.6,.2,1) forwards; }
+
+/* subtle neon shadow */
+.shadow-neon {
+    box-shadow:
+      0 0 0.5rem rgba(239,68,68,0.55),
+      0 0 1.25rem rgba(239,68,68,0.35),
+      inset 0 0 0.25rem rgba(239,68,68,0.25);
+  }
+
+  .dropcap:first-letter{
+    font-family: var(--tw-font-lorange, inherit);
+    font-size: 3rem;
+    line-height: .9;
+    float: left;
+    margin: .12rem .5rem 0 0;
+    color: #C81D25;
+  }
+  
+  /* float for decorative dots */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+  }
+  .animate-float {
+    animation: float 3.6s ease-in-out infinite;
+  }
+  
+  /* marquee for tag strip */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .marquee {
+    display: inline-block;
+    min-width: 200%;
+    animation: marquee 16s linear infinite;
+  }
+
+  /* Full-page vertical snap */
+.page-snap {
+  scroll-snap-type: y mandatory;
+}
+
+/* Each slide snaps to top */
+.snap-start {
+  scroll-snap-align: start;
+}

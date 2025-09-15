@@ -1,0 +1,419 @@
+import { useEffect, useMemo, useState } from "react";
+import { Instagram, Facebook } from "lucide-react";
+import Logo from "@/assets/essentials/orangerose_logo-removebg-preview.png";
+import { useI18n } from "../i18n";
+import LanguageDropdown from "../components/LanguageDropdown";
+
+// Brand: red #C81D25, beige #F7EBD9, line #4C0C27, light orange #FFB96B
+type Slot = "all" | "lunch" | "dinner";
+
+// What the backend returns
+type BackendSlot = "ALL" | "LUNCH" | "DINNER";
+type BackendClosure = {
+  id: string;
+  date: string;      // ISO DateTime from API
+  slot: BackendSlot; // enum from DB
+  note?: string | null;
+};
+
+function toFrontendSlot(s: BackendSlot): Slot {
+  if (s === "LUNCH") return "lunch";
+  if (s === "DINNER") return "dinner";
+  return "all"; // "ALL"
+}
+
+function isoDateFromDateTime(dt: string): string {
+  const d = new Date(dt);
+  return toISODate(d);
+}
+
+/* ---------- Page ---------- */
+
+export default function ContactPage() {
+  const { t, lang, localeTag } = useI18n() as any;
+  if (import.meta.env.DEV) {
+    console.log("[Contact] lang =", lang, "localeTag =", localeTag);
+    // Prove we’re seeing the right dictionary:
+    // @ts-ignore
+    console.log("[Contact] has contact keys?", t("contact.title"), t("contact.reservations"), t("contact.listTitle"));
+  }
+  return (
+    <div className="min-h-screen bg-[#F7EBD9] text-[#0B0B0B]">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-[#F7EBD9]/95 backdrop-blur border-b border-[#4C0C27]/10">
+        <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-3">
+            <img src={Logo} alt="L'Orange Rose" className="h-8" />
+            <span className="font-legacy text-xl tracking-wide">L&apos;Orange Rose</span>
+          </a>
+          <nav className="hidden md:flex items-center gap-8">
+            <LanguageDropdown />
+            <a href="/" className="nav-link text-lg font-medium tracking-wide">{t("contact.nav.home")}</a>
+            <a href="/gallery" className="nav-link text-lg font-medium tracking-wide">{t("nav.gallery")}</a>
+            <a href="/menu" className="nav-link text-lg font-medium tracking-wide">{t("contact.nav.menu")}</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* Contact blocks */}
+      <section className="mx-auto max-w-6xl px-6 lg:px-8 pt-6 pb-4">
+        <div className="mx-[calc(50%-50vw)] px-6 py-8">
+          <div className="flex w-screen items-center gap-6">
+            <span aria-hidden className="h-[4px] flex-1 bg-[#4C0C27]" />
+            <h3 className="font-legacy shrink-0 px-8 text-3xl md:text-5xl text-[#0B0B0B] tracking-wide">
+              {t("contact.title")}
+            </h3>
+            <span aria-hidden className="h-[4px] flex-1 bg-[#4C0C27]" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Phone */}
+          <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-6">
+            <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.reservations")}</h4>
+            <a href="tel:+3212345678" className="text-[#C81D25] text-xl font-semibold">
+              +32 12 34 56 78
+            </a>
+            <p className="text-[#4C0C27] mt-2 text-sm">{t("contact.callUsToBook")}</p>
+          </div>
+
+          {/* Address */}
+          <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-6">
+            <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.address")}</h4>
+            <p className="text-lg">Rue de l’Exemple 12, 1000 Bruxelles</p>
+            <a
+              className="inline-block mt-2 text-[#C81D25] hover:text-[#FFB96B] transition"
+              href="https://maps.google.com/?q=Rue%20de%20l’Exemple%2012%2C%201000%20Bruxelles"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t("contact.openInMaps")}
+            </a>
+          </div>
+
+          {/* Socials */}
+          <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-6">
+            <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.socials")}</h4>
+            <div className="flex gap-6">
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-lg text-[#0B0B0B] hover:text-[#C81D25] transition"
+              >
+                <Instagram className="h-5 w-5 text-[#C81D25]" aria-hidden />
+                <span>Instagram</span>
+              </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-lg text-[#0B0B0B] hover:text-[#C81D25] transition"
+              >
+                <Facebook className="h-5 w-5 text-[#1877F2]" aria-hidden />
+                <span>Facebook</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Hours / Horaire (insert this block between Contact blocks and Closures) ---- */}
+<section className="mx-auto max-w-6xl px-6 lg:px-8 py-8">
+  <HoursSection />
+</section>
+
+      {/* Read-only Closures */}
+      <section className="mx-auto max-w-6xl px-6 lg:px-8 py-8">
+        <h5 className="font-legacy text-2xl md:text-4xl tracking-wide mb-4">
+          {t("contact.closuresTitle")}
+        </h5>
+        <ReadOnlyClosuresCalendar />
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-[#4C0C27]/20 bg-[#F7EBD9] text-[#4C0C27]">
+        <div className="mx-auto max-w-6xl px-6 lg:px-8 py-10 flex items-center justify-between">
+          <span className="font-legacy text-xl">L&apos;Orange Rose</span>
+          <span className="text-[#4C0C27]/70 text-sm">© {new Date().getFullYear()}</span>
+        </div>
+      </footer>
+
+      {/* Local link styles */}
+      <style>{`
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link:hover { color: #C81D25; }
+        .nav-link::after {
+          content: '';
+          position: absolute;
+          width: 0; height: 2px; bottom: -6px; left: 50%;
+          background: linear-gradient(90deg, #FFB96B, #C81D25);
+          transition: all 0.3s ease; transform: translateX(-50%);
+        }
+        .nav-link:hover::after { width: 100%; }
+      `}</style>
+    </div>
+  );
+}
+
+/* ---------- Read-only Calendar ---------- */
+function HoursSection() {
+  const { t, localeTag } = useI18n();
+
+  type PublicRow = { weekday: number; text: string };
+
+  const [hours, setHours] = useState<PublicRow[] | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/hours");
+        if (!r.ok) throw new Error("fetch hours failed");
+        const data: PublicRow[] = await r.json();
+        if (!alive) return;
+
+        const map = new Map<number, string>(data.map(d => [d.weekday, d.text]));
+        const normalized: PublicRow[] = Array.from({ length: 7 }, (_, i) =>
+          ({ weekday: i, text: map.get(i) ?? "" })
+        );
+        setHours(normalized);
+      } catch (e) {
+        console.warn("[Hours] failed:", e);
+        if (alive) setHours(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const weekdayLabels = useMemo(() => {
+    const base = new Date(2020, 5, 1); // Monday
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(base); d.setDate(base.getDate() + i);
+      return new Intl.DateTimeFormat(localeTag, { weekday: "long" }).format(d);
+    });
+  }, [localeTag]);
+
+  const rows = hours ?? Array.from({ length: 7 }, (_, i) => ({ weekday: i, text: "" }));
+
+  return (
+    <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-4 md:p-6">
+      <h5 className="font-legacy text-2xl md:text-4xl tracking-wide mb-4">
+        {t("contact.hours.title")}
+      </h5>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm md:text-base">
+          <thead>
+            <tr className="text-left text-[#4C0C27]">
+              <th className="p-2 w-1/3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const label = weekdayLabels[r.weekday];
+              const text = r.text?.trim() || t("contact.hours.closedAllDay");
+              return (
+                <tr key={r.weekday} className="border-t border-[#4C0C27]/10">
+                  <td className="p-2 font-medium">{label}</td>
+                  <td className="p-2">{text}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-4 text-sm text-[#4C0C27]">
+        {t("contact.hours.note")}
+      </p>
+    </div>
+  );
+}
+
+
+
+function ReadOnlyClosuresCalendar() {
+  const { t, localeTag } = useI18n();
+  const [refDate, setRefDate] = useState(startOfMonth(new Date()));
+  const [closures, setClosures] = useState<Record<string, Slot>>({});
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/closures");
+        const data: BackendClosure[] = await res.json();
+        if (!alive) return;
+
+        const map: Record<string, Slot> = {};
+        for (const c of data) {
+          const iso = isoDateFromDateTime(c.date);
+          const incoming = toFrontendSlot(c.slot);
+          if (!map[iso]) map[iso] = incoming;
+          else if (map[iso] !== incoming) map[iso] = "all";
+        }
+        setClosures(map);
+      } catch {
+        // keep empty on error
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const weeks = useMemo(() => buildCalendar(refDate), [refDate]);
+
+  // localized weekday header (Mon–Sun) using Intl
+  const weekdayLabels = useMemo(() => {
+    const base = new Date(2020, 5, 1); // Mon Jun 1, 2020
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      // short weekday in current locale
+      return new Intl.DateTimeFormat(localeTag, { weekday: "short" }).format(d);
+    });
+  }, [localeTag]);
+
+  return (
+    <div className="rounded-2xl border border-[#4C0C27]/20 bg:white/70 bg-white/70 p-3 md:p-6">
+      {/* Compact header with month selection */}
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex items-center gap-2">
+          <button
+            className="px-2.5 py-1 rounded-lg border border-[#4C0C27]/30 hover:bg-white transition text-sm"
+            onClick={() => setRefDate(addMonths(refDate, -1))}
+            aria-label={t("contact.calPrevMonth")}
+          >
+            ←
+          </button>
+          <div className="font-legacy text-lg md:text-xl tracking-wide">
+            {refDate.toLocaleDateString(localeTag, { month: "long", year: "numeric" })}
+          </div>
+          <button
+            className="px-2.5 py-1 rounded-lg border border-[#4C0C27]/30 hover:bg-white transition text-sm"
+            onClick={() => setRefDate(addMonths(refDate, 1))}
+            aria-label={t("contact.calNextMonth")}
+          >
+            →
+          </button>
+        </div>
+        <div className="hidden md:flex items-center gap-4 text-sm text-[#4C0C27]">
+          <LegendSwatch color="#FFB96B" label={t("contact.legend.lunch")} />
+          <LegendSwatch color="#C81D25" label={t("contact.legend.dinner")} />
+          <LegendSwatch color="#4C0C27" label={t("contact.legend.all")} />
+        </div>
+      </div>
+
+      {/* Weekday header */}
+      <div className="grid grid-cols-7 text-center text-[10px] md:text-sm">
+        {weekdayLabels.map((d, i) => (
+          <div key={i} className="py-1 md:py-2 font-semibold text-[#4C0C27]">{d}</div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 text-center">
+        {weeks.flat().map((cell, idx) => {
+          const iso = cell?.iso;
+          const slot = iso ? closures[iso] : undefined;
+          const isOtherMonth = cell && cell.date.getMonth() !== refDate.getMonth();
+
+          return (
+            <div
+              key={cell ? iso : `empty-${idx}`}
+              className={`relative border border-[#4C0C27]/10
+                          ${isOtherMonth ? "bg-white/40 text-[#4C0C27]/50" : "bg-white/80 text-[#0B0B0B]"}
+                          ${slot ? "font-semibold" : ""} transition`}
+              style={{ aspectRatio: "1 / 1", padding: "2px" }}
+            >
+              {cell && (
+                <>
+                  <span className="absolute top-1 left-1 text-[10px] md:text-xs">
+                    {cell.date.toLocaleDateString(localeTag, { day: "2-digit" })}
+                  </span>
+                  {slot && (
+                    <span
+                    className="absolute left-1 right-1 bottom-1 rounded"
+                    style={{ height: "70%", backgroundColor: slotColor(slot) }}
+                  />
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend (mobile) */}
+      <div className="mt-3 flex md:hidden items-center gap-3 justify-center text-[11px] text-[#4C0C27]">
+        <LegendSwatch color="#FFB96B" label={t("contact.legend.lunch")} />
+        <LegendSwatch color="#C81D25" label={t("contact.legend.dinner")} />
+        <LegendSwatch color="#4C0C27" label={t("contact.legend.all")} />
+      </div>
+
+      
+    </div>
+  );
+}
+
+/* ---------- helpers ---------- */
+
+function LegendSwatch({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-2 w-4 md:h-2.5 md:w-5 rounded" style={{ backgroundColor: color }} />
+      {label}
+    </span>
+  );
+}
+function slotColor(slot: Slot) {
+  if (slot === "lunch") return "#FFB96B";
+  if (slot === "dinner") return "#C81D25";
+  return "#4C0C27";
+}
+function slotLabel(slot: Slot, t: (k: string) => string) {
+  if (slot === "lunch") return t("contact.legend.lunch");
+  if (slot === "dinner") return t("contact.legend.dinner");
+  return `${t("contact.legend.all")} (${/* all-day clarifier */ ""})`;
+}
+function startOfMonth(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+function addMonths(d: Date, delta: number) {
+  return new Date(d.getFullYear(), d.getMonth() + delta, 1);
+}
+function toISODate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function formatISOToDisplay(iso: string, localeTag: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(localeTag, {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+/** 6x7 matrix Mon–Sun; null pads */
+function buildCalendar(ref: Date) {
+  const first = startOfMonth(ref);
+  const firstWeekday = (first.getDay() + 6) % 7; // Mon=0
+  const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+
+  const cells: Array<{ date: Date; iso: string } | null> = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(first.getFullYear(), first.getMonth(), d);
+    cells.push({ date, iso: toISODate(date) });
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  while (cells.length < 42) cells.push(null);
+
+  const weeks: Array<Array<{ date: Date; iso: string } | null>> = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}

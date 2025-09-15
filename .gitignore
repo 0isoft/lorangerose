@@ -1,0 +1,27 @@
+# Node
+node_modules/
+npm-debug.log*
+pnpm-lock.yaml
+yarn.lock
+
+# Env (never commit)
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# Prisma
+prisma/*-migration.lock
+
+# Editor/OS
+.DS_Store
+.idea/
+.vscode/
+
+# Uploads / local data
+uploads/
+tmp/
