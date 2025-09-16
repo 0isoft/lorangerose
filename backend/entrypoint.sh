@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
-echo "Prisma migrate deploy..."
+
+echo "[entrypoint] Running Prisma migrate deploy…"
 npx prisma migrate deploy
-echo "Starting server..."
+
+echo "[entrypoint] Starting server…"
 node dist/index.js

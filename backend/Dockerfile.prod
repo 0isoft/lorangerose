@@ -1,34 +1,39 @@
-# Build on Debian (fast), run on Alpine (matches prisma musl target)
-FROM node:20-bullseye-slim AS deps
+# Dockerfile.prod
+FROM node:20-bullseye-slim AS build
 WORKDIR /app
-ENV NPM_CONFIG_FETCH_RETRIES=5 \
+
+ENV NODE_ENV=production \
+    NPM_CONFIG_FETCH_RETRIES=5 \
     NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000 \
     NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
+
+# Install deps separately for layer caching
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
 
-FROM node:20-bullseye-slim AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the rest and build
 COPY . .
-RUN npx prisma generate && npm run build
+# Generate Prisma client for the current platform (glibc)
+RUN npx prisma generate
+RUN npm run build
+
+# Prune dev deps AFTER build (keeps prod deps + built files)
 RUN npm ci --omit=dev --no-audit --no-fund
 
-FROM node:20-alpine AS runner
+# ---- Runner (same distro to avoid Prisma mismatch) ----
+FROM node:20-bullseye-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN apk add --no-cache wget
+# tini is nice but optional
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
-COPY <<'SH' /app/entrypoint.sh
-#!/bin/sh
-set -e
-echo "Prisma migrate deploy..."
-npx prisma migrate deploy
-echo "Starting server..."
-node dist/index.js
-SH
+
+# simple entrypoint
+COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 3000
 CMD ["/app/entrypoint.sh"]
