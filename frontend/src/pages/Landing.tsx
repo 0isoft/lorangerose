@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Phone, MapPin, Instagram } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { parseAPIDate, fmtDate, fmtWeekday } from "../lib/date";
+import { parseAPIDate, fmtWeekday } from "../lib/date";
 import LanguageDropdown from "../components/LanguageDropdown";
 import { useI18n } from "@/i18n";
-const DEBUG = import.meta.env.DEV;
 import Logo from "@/assets/essentials/orangerose_logo-removebg-preview.png";
+
 const USE_CHUNKY = false;
 
 // types
@@ -36,6 +36,9 @@ type Announcement = {
   _date?: Date;
 };
 
+// Easing tuple (approx easeOut)
+const easeOutExpo = [0.16, 1, 0.3, 1] as const;
+
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-[calc(50%-50vw)] px-6 py-16 select-none">
@@ -49,16 +52,6 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-// Simple fade/slide variants for framer-motion
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-};
-const fade = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
-};
 
 export default function Landing() {
   // --- NEW DATA STATE ---
@@ -237,7 +230,6 @@ export default function Landing() {
                   {t("hero.explore")}
                 </Link>
                 <Link to="/contact" className="btn-chunky btn-ink">
-                  {/* unchanged hardcoded CTA if you add later */}
                   Book Now
                 </Link>
               </div>
@@ -266,7 +258,6 @@ export default function Landing() {
                   const d = a._date!;
                   const day = new Intl.DateTimeFormat(localeTag, { day: "2-digit" }).format(d);
                   const mon = new Intl.DateTimeFormat(localeTag, { month: "short" }).format(d);
-                  const wk = fmtWeekday(d, localeTag as any /* keeps your helper optional signature */);
 
                   const hero = a.mediaAssets?.[0];
                   const hasImg = !!hero?.url;
@@ -277,7 +268,7 @@ export default function Landing() {
                       initial={{ opacity: 0, y: 16 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.2 }}
-                      transition={{ duration: 0.35, ease: "easeOut" }}
+                      transition={{ duration: 0.35, ease: easeOutExpo }}
                       className="group relative w-full max-w-[29rem] overflow-hidden border border-[#4C0C27]/15 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all rounded-none"
                     >
                       {hasImg ? (
@@ -299,9 +290,7 @@ export default function Landing() {
                         </>
                       ) : (
                         <div className="p-4 md:p-5">
-                          <div className="text-[11px] uppercase tracking-[0.14em] text-[#4C0C27]/80 mb-1">
-                            {wk} • {day} {mon}
-                          </div>
+                          
                           <h4 className="text-lg md:text-xl text-[#0B0B0B] leading-snug mb-1">{a.title}</h4>
                           {a.desc && <p className="text-sm md:text-base text-[#4C0C27] leading-relaxed">{a.desc}</p>}
                         </div>
@@ -318,10 +307,10 @@ export default function Landing() {
         <section id="about" className="relative mx-auto max-w-6xl px-6 lg:px-8 py-24">
           <SectionHeading>{t("about.title")}</SectionHeading>
           <motion.div
-            initial="hidden"
-            whileInView="show"
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            variants={fadeUp}
+            transition={{ duration: 0.6, ease: easeOutExpo }}
             className="mt-10 text-center max-w-4xl mx-auto"
           >
             <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed text-[#0B0B0B] font-light tracking-wide">
@@ -341,10 +330,10 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-14 text-center">
               <motion.div
-                initial="hidden"
-                whileInView="show"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.5 }}
-                variants={fade}
+                transition={{ duration: 0.6, ease: easeOutExpo }}
                 className="group"
               >
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 group-hover:scale-110 group-hover:bg-[#FFB96B] transition-all duration-300">
@@ -357,10 +346,10 @@ export default function Landing() {
               </motion.div>
 
               <motion.div
-                initial="hidden"
-                whileInView="show"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.5 }}
-                variants={fade}
+                transition={{ duration: 0.6, ease: easeOutExpo }}
                 className="group"
               >
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 group-hover:scale-110 group-hover:bg-[#FFB96B] transition-all duration-300">
@@ -373,10 +362,10 @@ export default function Landing() {
               </motion.div>
 
               <motion.div
-                initial="hidden"
-                whileInView="show"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.5 }}
-                variants={fade}
+                transition={{ duration: 0.6, ease: easeOutExpo }}
                 className="group"
               >
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 group-hover:scale-110 group-hover:bg-[#FFB96B] transition-all duration-300">
