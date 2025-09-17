@@ -24,35 +24,46 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run build
+          ls -lah dist
+          test -f dist/index.html || (echo "no dist/index.html" && exit 1)
 
       - name: Prepare SSH key (from base64)
         shell: bash
         run: |
           echo "$LS_SSH_KEY_B64" | base64 -d > key.pem
-          # allow container user to read it (Go SSH client doesn’t care about 600)
           chmod 644 key.pem
-          ls -l key.pem
         env:
           LS_SSH_KEY_B64: ${{ secrets.LS_SSH_KEY_B64 }}
 
-      - name: SSH connectivity check
+      - name: Clean remote site dir
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
           key_path: key.pem
           script: |
-            whoami
-            ls -la /srv/app/site || true
+            mkdir -p /srv/app/site
+            rm -rf /srv/app/site/*
 
-      - name: Upload dist to Lightsail
+      - name: Upload dist to Lightsail (flatten to /srv/app/site)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
           key_path: key.pem
-          source: "frontend/dist/*"
+          source: "frontend/dist/**"
           target: "/srv/app/site"
-          port: 22
+          strip_components: 2     # <-- unwrap "frontend/dist"
+          overwrite: true
           timeout: 120s
           command_timeout: 5m
+
+      - name: Verify files on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LS_HOST }}
+          username: ubuntu
+          key_path: key.pem
+          script: |
+            ls -lah /srv/app/site | sed -n '1,100p'
+            test -f /srv/app/site/index.html || (echo "index.html missing" && exit 1)
