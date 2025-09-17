@@ -21,6 +21,7 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Prepare SSH key (from base64)
         shell: bash
@@ -36,26 +37,37 @@ jobs:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
           key_path: key.pem
+          envs: GHCR_USER,GHCR_PAT
           script: |
             set -e
-            # pick the right directory (your repo is at /srv/app)
+
+            # choose repo dir (yours is /srv/app)
             if [ -d /srv/app/your-repo ]; then
               cd /srv/app/your-repo
             else
               cd /srv/app
             fi
 
-            # pull latest repo changes (for nginx.conf etc.)
+            # fetch latest code (nginx.conf, compose, etc.)
             git fetch --all
             git reset --hard origin/main
 
-            # pull API image if updated (no-op otherwise)
-            echo "$TOKEN" | docker login ghcr.io -u "$USER" --password-stdin || true
-            docker compose -f docker-compose.prod.yml pull || true
+            # require backend .env
+            if [ ! -f ./backend/.env ]; then
+              echo "ERROR: ./backend/.env missing on server (expected next to compose)."; exit 1
+            fi
 
-            # apply config + restart
+            # login to GHCR only if creds are present; skip if image is public
+            if [ -n "$GHCR_PAT" ] && [ -n "$GHCR_USER" ]; then
+              echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            fi
+
+            # pull updated images and restart
+            docker compose -f docker-compose.prod.yml pull || true
             docker compose -f docker-compose.prod.yml up -d
+
+            # pick up updated nginx.conf (MIME types fix)
             docker compose -f docker-compose.prod.yml restart nginx
         env:
-          USER:  ${{ github.actor }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_PAT:  ${{ secrets.GHCR_PAT }}
