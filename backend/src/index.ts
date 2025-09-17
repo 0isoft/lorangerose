@@ -30,6 +30,14 @@ const trackLimiter = rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 
 
 
 const app = express();
+
+app.use((req, _res, next) => {
+  console.log('[DEBUG]', req.method, req.url,
+    'Host:', req.headers.host,
+    'Cookie:', req.headers.cookie ? '(present)' : '(none)');
+  next();
+});
+
 app.set("trust proxy", true);
 app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
