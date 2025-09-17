@@ -6,12 +6,11 @@ on:
     paths:
       - "frontend/**"
       - ".github/workflows/frontend-deploy.yml"
-  workflow_dispatch: {}   # allow manual runs
+  workflow_dispatch: {}
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -26,12 +25,13 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build
 
-      # Write the SSH key from base64 into a file (avoids newline issues)
-      - name: Prepare SSH key
+      - name: Prepare SSH key (from base64)
         shell: bash
         run: |
           echo "$LS_SSH_KEY_B64" | base64 -d > key.pem
-          chmod 600 key.pem
+          # allow container user to read it (Go SSH client doesn’t care about 600)
+          chmod 644 key.pem
+          ls -l key.pem
         env:
           LS_SSH_KEY_B64: ${{ secrets.LS_SSH_KEY_B64 }}
 
