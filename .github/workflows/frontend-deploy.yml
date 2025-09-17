@@ -21,6 +21,8 @@ jobs:
 
       - name: Install & Build
         working-directory: frontend
+        env:
+          VITE_API_BASE: /api
         run: |
           npm ci --no-audit --no-fund
           npm run build

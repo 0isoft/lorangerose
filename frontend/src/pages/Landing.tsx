@@ -236,8 +236,7 @@ export default function Landing() {
             )}
           </div>
         </section>
-
-        {/* Full-width divider line directly below carousel */}
+        {/* Full-width divider line directly below carousel , something*/}
         <div className="mx-[calc(50%-50vw)] w-screen h-[1px] bg-[#4C0C27]" />
 
         {/* Announcements grid */}
