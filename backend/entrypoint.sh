@@ -1,8 +1,11 @@
-#!/bin/sh
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "[entrypoint] Running Prisma migrate deploy…"
+echo "Running Prisma generate…"
+npx prisma generate
+
+echo "Applying migrations (safe in CI/CD if your workflow expects it)…"
 npx prisma migrate deploy
 
-echo "[entrypoint] Starting server…"
-node dist/index.js
+echo "Starting API…"
+node dist/server.js

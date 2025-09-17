@@ -1,14 +1,8 @@
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
 WORKDIR /app
-RUN npm i -g npm@latest
-
-# Copy manifest first for layer caching
-COPY package.json ./
-# Install deps inside image (no host install)
-RUN npm install
-
-# Then copy the rest
+COPY package*.json ./
+RUN npm ci --no-audit --no-fund
 COPY . .
-
 EXPOSE 5173
+CMD ["npm","run","dev","--","--host","0.0.0.0","--port","5173"]
