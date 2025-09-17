@@ -1,12 +1,11 @@
 // src/analytics.ts
 import type { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { UAParser } from "ua-parser-js";
 
 import crypto from "crypto";
 import geoip from "geoip-lite"; // low-friction; for higher accuracy use maxmind + GeoLite2
 
-const prisma = new PrismaClient();
+import prisma from "./lib/prisma";
 const SALT = process.env.IP_HASH_SALT ?? "change-me";
 
 function getClientIp(req: Request) {

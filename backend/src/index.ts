@@ -22,8 +22,7 @@ import { trackHit } from "./analytics";
 import rateLimit from "express-rate-limit";
 import adminAnalytics from "./routes/admin/analytics";
 
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import prisma from "./lib/prisma"
 
 const trackLimiter = rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: true, legacyHeaders: false });
 
@@ -40,7 +39,7 @@ app.use((req, _res, next) => {
 
 app.set("trust proxy", true);
 app.use(cookieParser());
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "10mb" }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
 
 // Ensure uploads dir exists (for local/dev disk storage)
@@ -63,7 +62,7 @@ app.use("/api/admin/announcements", requireAdmin, adminAnnouncements);
 app.use("/api/admin/closures", requireAdmin, adminClosures);
 app.use("/api/admin/media", requireAdmin, adminMedia);
 app.use("/api/admin/gallery", requireAdmin, adminGallery);
-app.use("/api/admin/recurring-closures", recurringClosures);
+app.use("/api/admin/recurring-closures", requireAdmin, recurringClosures);
 app.use("/api/admin/hours", adminHours)
 app.post("/api/track", trackLimiter, trackHit);
 app.use("/api/admin/analytics", requireAdmin, adminAnalytics);

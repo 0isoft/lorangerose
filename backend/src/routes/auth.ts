@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+const isProd = process.env.NODE_ENV === "production";
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
@@ -18,7 +19,12 @@ router.post("/login", async (req, res) => {
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
 
   const token = jwt.sign({ uid: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
-  res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+  res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProd,
+        path: "/",
+      });
   res.json({ ok: true });
 });
 
