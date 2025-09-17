@@ -1,26 +1,20 @@
-# .github/workflows/backend-deploy.yml
-name: Deploy Backend (pull image on server)
+- name: Prepare SSH key
+  shell: bash
+  run: |
+    echo "$LS_SSH_KEY_B64" | base64 -d > key.pem
+    chmod 600 key.pem
+  env:
+    LS_SSH_KEY_B64: ${{ secrets.LS_SSH_KEY_B64 }}
 
-on:
-  workflow_run:
-    workflows: ["Build & Push API Image"]
-    types: [completed]
-    branches: [ main ]
-
-jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: SSH & pull latest image
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.LS_HOST }}
-          username: ubuntu
-          key: ${{ secrets.LS_SSH_KEY }}
-          script: |
-            set -e
-            cd /srv/app/your-repo
-            docker login ghcr.io -u $GITHUB_ACTOR -p ${{ secrets.GITHUB_TOKEN }}
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
+- name: SSH & pull + restart
+  uses: appleboy/ssh-action@v1.0.3
+  with:
+    host: ${{ secrets.LS_HOST }}
+    username: ubuntu
+    key_path: key.pem
+    script: |
+      set -e
+      cd /srv/app/your-repo
+      docker login ghcr.io -u $GITHUB_ACTOR -p ${{ secrets.GITHUB_TOKEN }}
+      docker compose -f docker-compose.prod.yml pull
+      docker compose -f docker-compose.prod.yml up -d
