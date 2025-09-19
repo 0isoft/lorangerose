@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Phone, MapPin, Instagram } from "lucide-react";
+import { Phone, MapPin, Instagram, Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { parseAPIDate, fmtWeekday } from "../lib/date";
@@ -61,6 +61,7 @@ export default function Landing() {
   const [loadingNews, setLoadingNews] = useState(true);
   const [idx, setIdx] = useState(0);
   const [scrollY, setScrollY] = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // i18n
   const { t, localeTag } = useI18n();
@@ -180,32 +181,109 @@ export default function Landing() {
 
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
 
-          {/* Header */}
+          
           <header className="absolute inset-x-0 top-0 z-50">
-            <div className="flex items-center justify-between px-6 py-6">
-              <h1 className="font-lorange text-4xl md:text-5xl text-white drop-shadow-lg font-black flex items-center gap-3 whitespace-nowrap">
-                <img
-                  src={Logo}
-                  alt="L'Orange Rose logo"
-                  className="h-8 md:h-20 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
-                  decoding="async"
-                />
-              </h1>
-              <nav className="hidden md:flex items-center gap-8">
-                {/* Language dropdown to the LEFT of Menu */}
-                <LanguageDropdown />
-                <Link to="menu" className="link-underline link-underline-beige text-xl font-medium">
-                  {t("nav.menu")}
-                </Link>
-                <Link to="contact" className="link-underline link-underline-orange text-xl font-medium">
-                  {t("nav.contact")}
-                </Link>
-                <Link to="gallery" className="link-underline link-underline-orange text-xl font-medium">
-                  {t("nav.gallery")}
-                </Link>
-              </nav>
-            </div>
-          </header>
+  <div className="flex items-center justify-between px-4 sm:px-6 py-8 sm:py-6">
+    {/* Logo block: make it predictable on mobile */}
+    <h1 className="font-lorange text-3xl sm:text-4xl md:text-5xl text-white drop-shadow-lg font-black flex items-center gap-3 whitespace-nowrap">
+      <img
+        src={Logo}
+        alt="L'Orange Rose logo"
+        className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)] shrink-0"
+        decoding="async"
+      />
+    </h1>
+
+    {/* Desktop nav (unchanged behavior from md+) */}
+    <nav className="hidden md:flex items-center gap-8">
+      <LanguageDropdown />
+      <Link to="menu" className="link-underline link-underline-beige text-xl font-medium">
+        {t("nav.menu")}
+      </Link>
+      <Link to="contact" className="link-underline link-underline-orange text-xl font-medium">
+        {t("nav.contact")}
+      </Link>
+      <Link to="gallery" className="link-underline link-underline-orange text-xl font-medium">
+        {t("nav.gallery")}
+      </Link>
+    </nav>
+
+    {/* Mobile hamburger (only <md) */}
+    <button
+      type="button"
+      className="md:hidden inline-flex items-center justify-center rounded-md bg-black/30 hover:bg-black/40 text-white w-10 h-10"
+      aria-label="Open menu"
+      onClick={() => setMobileOpen(true)}
+    >
+      <Menu size={22} />
+    </button>
+  </div>
+
+  {/* Mobile menu sheet */}
+  {mobileOpen && (
+    <div className="md:hidden">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black/50"
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
+      {/* Panel */}
+      <motion.div
+        initial={{ y: -24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -24, opacity: 0 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 bg-[#0B0B0B]/95 backdrop-blur px-4 sm:px-6 pt-4 pb-6"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img
+              src={Logo}
+              alt="L'Orange Rose logo"
+              className="h-10 w-auto"
+            />
+            <span className="font-legacy text-xl text-white/90">L&apos;Orange Rose</span>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20 text-white w-10 h-10"
+            aria-label="Close menu"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X size={22} />
+          </button>
+        </div>
+
+        {/* Links (touch-friendly) */}
+        <div className="mt-4 border-t border-white/10 pt-4 space-y-2">
+          <LanguageDropdown />
+          <Link
+            to="/menu"
+            className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
+            onClick={() => setMobileOpen(false)}
+          >
+            {t("nav.menu")}
+          </Link>
+          <Link
+            to="/contact"
+            className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
+            onClick={() => setMobileOpen(false)}
+          >
+            {t("nav.contact")}
+          </Link>
+          <Link
+            to="/gallery"
+            className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
+            onClick={() => setMobileOpen(false)}
+          >
+            {t("nav.gallery")}
+          </Link>
+        </div>
+      </motion.div>
+    </div>
+  )}
+</header>
 
           {/* Hero content */}
           <div
