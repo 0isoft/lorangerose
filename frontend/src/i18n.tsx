@@ -92,7 +92,7 @@ const MESSAGES: Record<Lang, Messages> = {
         },
         
         announcements: {
-            title: "Qoui de neuf",
+            title: "Quoi de neuf",
         },
         footer: { tagline: "Nuits néon • Saveurs audacieuses • Zéro remplissage" },
         aria: { openLangMenu: "Ouvrir le menu des langues" },
@@ -112,10 +112,10 @@ const MESSAGES: Record<Lang, Messages> = {
             facebook: "Facebook",
         },
         announcements: {
-            title: "Wat gebeurt er tegenwoordig",
+            title: "Wat is er nieuw",
         },
         contact: {
-            nav: { home: "Home", menu: "Menu", gallery: "Galerij" },
+            nav: { home: "Home", menu: "Menu", gallery: "Galerij"},
             title: "Contact",
             reservations: "Reservaties",
             callUsToBook: "Bel ons om een tafel te reserveren.",

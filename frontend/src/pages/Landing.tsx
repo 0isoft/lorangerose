@@ -290,9 +290,9 @@ export default function Landing() {
             className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-6 hero-content"
             style={{ transform: `translateY(${scrollY * 0.1}px)` }}
           >
-            <h2 className="font-lorange text-5xl md:text-7xl lg:text-[6.5rem] leading-tight text-red-800 drop-shadow-2xl font-black whitespace-nowrap">
-              L&apos;Orange Rose
-            </h2>
+            <h2 className="font-lorange text-4xl sm:text-5xl md:text-6xl lg:text-[6.5rem] leading-tight text-red-800 drop-shadow-2xl font-black whitespace-nowrap">
+  L&apos;Orange Rose
+</h2>
             <p className="mt-6 text-white/90 text-xl md:text-2xl lg:text-6xl max-w-[65ch] font-light font-edo">
               {t("hero.tagline")}
             </p>
