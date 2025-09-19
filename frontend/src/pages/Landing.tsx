@@ -41,13 +41,28 @@ const easeOutExpo = [0.16, 1, 0.3, 1] as const;
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-[calc(50%-50vw)] px-6 py-16 select-none">
-      <div className="flex w-screen items-center gap-6">
-        <span aria-hidden className="h-[4px] flex-1 bg-[#4C0C27]" />
-        <h3 className="font-legacy shrink-0 px-8 text-4xl md:text-5xl lg:text-6xl text-[#0B0B0B] tracking-wide">
+    <div className="relative mx-[calc(50%-50vw)] px-6 py-12 sm:py-16 overflow-x-clip">
+      <div className="flex items-center w-full gap-3 sm:gap-6 min-w-0">
+        {/* Left segment goes from left edge to title gap */}
+        <span aria-hidden className="h-[3px] grow bg-[#4C0C27]" />
+
+        {/* Centered title (doesn't shrink) */}
+        <h3
+          className="
+            font-legacy shrink-0
+            text-center px-4 sm:px-6
+            text-[#0B0B0B] tracking-wide
+            text-2xl sm:text-3xl md:text-5xl lg:text-6xl
+            leading-tight
+            max-w-[min(92vw,28ch)]
+            bg-[#F7EBD9]
+          "
+        >
           {children}
         </h3>
-        <span aria-hidden className="h-[4px] flex-1 bg-[#4C0C27]" />
+
+        {/* Right segment goes from title gap to right edge */}
+        <span aria-hidden className="h-[3px] grow bg-[#4C0C27]" />
       </div>
     </div>
   );

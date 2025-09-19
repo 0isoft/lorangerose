@@ -27,6 +27,35 @@ function isoDateFromDateTime(dt: string): string {
   return toISODate(d);
 }
 
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative mx-[calc(50%-50vw)] px-6 py-12 sm:py-16 overflow-x-clip">
+      <div className="flex items-center w-full gap-3 sm:gap-6 min-w-0">
+        {/* Left segment goes from left edge to title gap */}
+        <span aria-hidden className="h-[3px] grow bg-[#4C0C27]" />
+
+        {/* Centered title (doesn't shrink) */}
+        <h3
+          className="
+            font-legacy shrink-0
+            text-center px-4 sm:px-6
+            text-[#0B0B0B] tracking-wide
+            text-2xl sm:text-3xl md:text-5xl lg:text-6xl
+            leading-tight
+            max-w-[min(92vw,28ch)]
+            bg-[#F7EBD9]
+          "
+        >
+          {children}
+        </h3>
+
+        {/* Right segment goes from title gap to right edge */}
+        <span aria-hidden className="h-[3px] grow bg-[#4C0C27]" />
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Page ---------- */
 
 export default function ContactPage() {
@@ -56,16 +85,14 @@ export default function ContactPage() {
       </header>
 
       {/* Contact blocks */}
+
+      
       <section className="mx-auto max-w-6xl px-6 lg:px-8 pt-6 pb-4">
-        <div className="mx-[calc(50%-50vw)] px-6 py-8">
-          <div className="flex w-screen items-center gap-6">
-            <span aria-hidden className="h-[4px] flex-1 bg-[#4C0C27]" />
-            <h3 className="font-legacy shrink-0 px-8 text-3xl md:text-5xl text-[#0B0B0B] tracking-wide">
-              {t("contact.title")}
-            </h3>
-            <span aria-hidden className="h-[4px] flex-1 bg-[#4C0C27]" />
-          </div>
-        </div>
+      <section className="mx-auto max-w-6xl px-6 lg:px-8 pt-4 pb-2">
+        <SectionHeading >
+          <h1 className="font-legacy text-3xl md:text-4xl tracking-wide">Contact</h1>
+        </SectionHeading>
+      </section>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Phone */}
