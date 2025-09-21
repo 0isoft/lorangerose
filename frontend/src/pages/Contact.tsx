@@ -3,6 +3,9 @@ import { Instagram, Facebook } from "lucide-react";
 import Logo from "@/assets/essentials/orangerose_logo-removebg-preview.png";
 import { useI18n } from "../i18n";
 import LanguageDropdown from "../components/LanguageDropdown";
+import { Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+
 
 // Brand: red #C81D25, beige #F7EBD9, line #4C0C27, light orange #FFB96B
 type Slot = "all" | "lunch" | "dinner";
@@ -60,6 +63,15 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 export default function ContactPage() {
   const { t, lang, localeTag } = useI18n() as any;
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // lock body scroll when menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   if (import.meta.env.DEV) {
     console.log("[Contact] lang =", lang, "localeTag =", localeTag);
     // Prove we’re seeing the right dictionary:
@@ -69,30 +81,123 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[#F7EBD9] text-[#0B0B0B]">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#F7EBD9]/95 backdrop-blur border-b border-[#4C0C27]/10">
-        <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <img src={Logo} alt="L'Orange Rose" className="h-8" />
-            <span className="font-legacy text-xl tracking-wide">L&apos;Orange Rose</span>
-          </a>
-          <nav className="hidden md:flex items-center gap-8">
-            <LanguageDropdown />
-            <a href="/" className="nav-link text-lg font-medium tracking-wide">{t("contact.nav.home")}</a>
-            <a href="/gallery" className="nav-link text-lg font-medium tracking-wide">{t("nav.gallery")}</a>
-            <a href="/menu" className="nav-link text-lg font-medium tracking-wide">{t("contact.nav.menu")}</a>
-          </nav>
-        </div>
-      </header>
+      <header className="sticky top-0 z-40 bg-[#F7EBD9]/95 backdrop-blur border-b border-[#4C0C27]/10 text-[#4C0C27]">
+  <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+    {/* Brand */}
+    <a href="/" className="flex items-center gap-3">
+      <img src={Logo} alt="L'Orange Rose" className="h-8 w-auto" />
+      <span className="font-legacy text-xl tracking-wide">L&apos;Orange Rose</span>
+    </a>
+
+    {/* Desktop nav (unchanged) */}
+    <nav className="hidden md:flex items-center gap-8">
+      <LanguageDropdown />
+      <a href="/" className="nav-link text-lg font-medium tracking-wide">{t("contact.nav.home")}</a>
+      <a href="/gallery" className="nav-link text-lg font-medium tracking-wide">{t("nav.gallery")}</a>
+      <a href="/menu" className="nav-link text-lg font-medium tracking-wide">{t("contact.nav.menu")}</a>
+    </nav>
+
+    {/* Mobile hamburger */}
+    <button
+      type="button"
+      className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md
+                 bg-[#4C0C27]/10 hover:bg-[#4C0C27]/15 text-[#4C0C27]
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4C0C27]/40"
+      aria-label="Open menu"
+      aria-expanded={mobileOpen}
+      onClick={() => setMobileOpen(true)}
+    >
+      <Menu size={22} strokeWidth={2} />
+    </button>
+  </div>
+
+  {/* Mobile menu sheet */}
+  <AnimatePresence>
+    {mobileOpen && (
+      <div className="md:hidden">
+        {/* Backdrop */}
+        <motion.div
+          key="backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.35 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-40 bg-[#4C0C27]"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+
+        {/* Panel */}
+        <motion.div
+          key="panel"
+          initial={{ y: -24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -24, opacity: 0 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed top-0 left-0 right-0 z-50
+                     bg-[#F7EBD9]/95 backdrop-blur
+                     border-b border-[#4C0C27]/10
+                     px-4 sm:px-6 pt-4 pb-6 text-[#4C0C27]"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src={Logo} alt="L'Orange Rose logo" className="h-10 w-auto" />
+              <span className="font-legacy text-xl">L&apos;Orange Rose</span>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-md
+                         bg-[#4C0C27]/10 hover:bg-[#4C0C27]/15
+                         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4C0C27]/40"
+              aria-label="Close menu"
+              onClick={() => setMobileOpen(false)}
+            >
+              <X size={22} strokeWidth={2} />
+            </button>
+          </div>
+
+          {/* Links (touch-friendly) */}
+          <div className="mt-4 border-t border-[#4C0C27]/10 pt-2">
+            <div className="py-2">
+              <LanguageDropdown />
+            </div>
+            <a
+              href="/menu"
+              className="block px-3 py-3 rounded-md text-lg hover:bg-[#4C0C27]/5"
+              onClick={() => setMobileOpen(false)}
+            >
+              {t("contact.nav.menu")}
+            </a>
+            <a
+              href="/gallery"
+              className="block px-3 py-3 rounded-md text-lg hover:bg-[#4C0C27]/5"
+              onClick={() => setMobileOpen(false)}
+            >
+              {t("nav.gallery")}
+            </a>
+            <a
+              href="/"
+              className="block px-3 py-3 rounded-md text-lg hover:bg-[#4C0C27]/5"
+              onClick={() => setMobileOpen(false)}
+            >
+              {t("contact.nav.home")}
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    )}
+  </AnimatePresence>
+</header>
 
       {/* Contact blocks */}
 
-      
+
       <section className="mx-auto max-w-6xl px-6 lg:px-8 pt-6 pb-4">
-      <section className="mx-auto max-w-6xl px-6 lg:px-8 pt-4 pb-2">
-        <SectionHeading >
-          <h1 className="font-legacy text-3xl md:text-4xl tracking-wide">Contact</h1>
-        </SectionHeading>
-      </section>
+        <section className="mx-auto max-w-6xl px-6 lg:px-8 pt-4 pb-2">
+          <SectionHeading >
+            <h1 className="font-legacy text-3xl md:text-4xl tracking-wide">Contact</h1>
+          </SectionHeading>
+        </section>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Phone */}
@@ -146,9 +251,9 @@ export default function ContactPage() {
       </section>
 
       {/* ---- Hours / Horaire (insert this block between Contact blocks and Closures) ---- */}
-<section className="mx-auto max-w-6xl px-6 lg:px-8 py-8">
-  <HoursSection />
-</section>
+      <section className="mx-auto max-w-6xl px-6 lg:px-8 py-8">
+        <HoursSection />
+      </section>
 
       {/* Read-only Closures */}
       <section className="mx-auto max-w-6xl px-6 lg:px-8 py-8">
@@ -360,9 +465,9 @@ function ReadOnlyClosuresCalendar() {
                   </span>
                   {slot && (
                     <span
-                    className="absolute left-1 right-1 bottom-1 rounded"
-                    style={{ height: "70%", backgroundColor: slotColor(slot) }}
-                  />
+                      className="absolute left-1 right-1 bottom-1 rounded"
+                      style={{ height: "70%", backgroundColor: slotColor(slot) }}
+                    />
                   )}
                 </>
               )}
@@ -378,7 +483,7 @@ function ReadOnlyClosuresCalendar() {
         <LegendSwatch color="#4C0C27" label={t("contact.legend.all")} />
       </div>
 
-      
+
     </div>
   );
 }

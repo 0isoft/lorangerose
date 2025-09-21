@@ -49,14 +49,20 @@ const MESSAGES: Record<Lang, Messages> = {
                 closedAllDay: "Closed all day",
             },
         },
+        menu: {
+            title: "Menu",
+            loading: "Loading menu…",
+            comingSoon: "Menu coming soon.",
+            imageAlt: "L'Orange Rose menu",
+          },
         
         footer: { tagline: "Neon nights • Bold flavors • No filler arcs" },
         aria: { openLangMenu: "Open language menu" },
         langNames: { en: "English", fr: "Français", nl: "Nederlands" },
     },
     fr: {
-        nav: { menu: "Menu", contact: "Contact", gallery: "Galerie", language: "Langue" },
-        hero: { tagline: "Asian food", explore: "Voir le menu" },
+        nav: { menu: "Carte", contact: "Contact", gallery: "Galerie", language: "Langue" },
+        hero: { tagline: "Asian food", explore: "Voir la carte" },
         about: { title: "À propos", body: "Un beau texte avec de belles phrases sinueuses, descriptives et envoûtantes. Des mets et boissons irrésistibles." },
         info: {
             visit: "Venez nous voir",
@@ -68,7 +74,7 @@ const MESSAGES: Record<Lang, Messages> = {
             facebook: "Facebook",
         },
         contact: {
-            nav: { home: "Accueil", menu: "Menu", gallery:"Gallerie"  },
+            nav: { home: "Accueil", menu: "Carte", gallery:"Gallerie"  },
             title: "Contact",
             reservations: "Réservations",
             callUsToBook: "Appelez-nous pour réserver une table.",
@@ -90,6 +96,12 @@ const MESSAGES: Record<Lang, Messages> = {
                 closedAllDay: "Fermé toute la journée",
             },
         },
+        menu: {
+            title: "Carte",                     // ← the important change
+            loading: "Chargement de la carte…",
+            comingSoon: "Carte à venir.",
+            imageAlt: "Carte de L'Orange Rose",
+          },
         
         announcements: {
             title: "Quoi de neuf",
@@ -99,8 +111,8 @@ const MESSAGES: Record<Lang, Messages> = {
         langNames: { en: "English", fr: "Français", nl: "Nederlands" },
     },
     nl: {
-        nav: { menu: "Menu", contact: "Contact", gallery: "Galerij", language: "Taal" },
-        hero: { tagline: "Asian food", explore: "Ontdek het menu" },
+        nav: { menu: "Menukaart", contact: "Contact", gallery: "Galerij", language: "Taal" },
+        hero: { tagline: "Asian food", explore: "Ontdek het menukaart" },
         about: { title: "Over ons", body: "Een mooie tekst met lange meanderende zinnen, beeldend en betoverend. Verleidelijke gerechten en drankjes." },
         info: {
             visit: "Bezoek ons",
@@ -115,7 +127,7 @@ const MESSAGES: Record<Lang, Messages> = {
             title: "Wat is er nieuw",
         },
         contact: {
-            nav: { home: "Home", menu: "Menu", gallery: "Galerij"},
+            nav: { home: "Home", menu: "Menukaart", gallery: "Galerij"},
             title: "Contact",
             reservations: "Reservaties",
             callUsToBook: "Bel ons om een tafel te reserveren.",
@@ -137,6 +149,13 @@ const MESSAGES: Record<Lang, Messages> = {
                 closedAllDay: "Hele dag gesloten",
             },
         },
+
+        menu: {
+            title: "Menukaart",
+            loading: "Menukaart laden…",
+            comingSoon: "Menukaart binnenkort.",
+            imageAlt: "Menukaart L'Orange Rose",
+          },
         
         footer: { tagline: "Neonnachten • Gedurfde smaken • Geen vulling" },
         aria: { openLangMenu: "Taalmenu openen" },
