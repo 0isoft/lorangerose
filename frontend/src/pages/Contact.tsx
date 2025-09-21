@@ -204,7 +204,7 @@ export default function ContactPage() {
           <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-6">
             <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.reservations")}</h4>
             <a href="tel:+3212345678" className="text-[#C81D25] text-xl font-semibold">
-              +32 12 34 56 78
+              081 / 63 41 00
             </a>
             <p className="text-[#4C0C27] mt-2 text-sm">{t("contact.callUsToBook")}</p>
           </div>
@@ -212,10 +212,10 @@ export default function ContactPage() {
           {/* Address */}
           <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-6">
             <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.address")}</h4>
-            <p className="text-lg">Rue de l’Exemple 12, 1000 Bruxelles</p>
+            <p className="text-lg">Chaussée de Namur 19, 5310 Éghezée</p>
             <a
               className="inline-block mt-2 text-[#C81D25] hover:text-[#FFB96B] transition"
-              href="https://maps.google.com/?q=Rue%20de%20l’Exemple%2012%2C%201000%20Bruxelles"
+              href="https://www.google.com/maps/place/L'Orange+Rose/@50.5900854,4.9100618,17z/data=!3m2!4b1!5s0x47c1759c40df2da7:0x883dd19e92984529!4m6!3m5!1s0x47c1759c4533df0b:0x63407f6c38127fbf!8m2!3d50.590082!4d4.9126367!16s%2Fg%2F1tfvgc7r?entry=ttu&g_ep=EgoyMDI1MDkxNy4wIKXMDSoASAFQAw%3D%3D"
               target="_blank"
               rel="noreferrer"
             >
@@ -228,7 +228,7 @@ export default function ContactPage() {
             <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.socials")}</h4>
             <div className="flex gap-6">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/lorangerose/"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-lg text-[#0B0B0B] hover:text-[#C81D25] transition"
@@ -237,7 +237,7 @@ export default function ContactPage() {
                 <span>Instagram</span>
               </a>
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/p/LOrange-Rose-100064241130233/"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 text-lg text-[#0B0B0B] hover:text-[#C81D25] transition"

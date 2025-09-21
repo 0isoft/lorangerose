@@ -180,9 +180,8 @@ export default function Landing() {
             {slides.map((s, i) => (
               <div
                 key={i}
-                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                  i === idx ? "opacity-100 scale-105" : "opacity-0 scale-100"
-                }`}
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${i === idx ? "opacity-100 scale-105" : "opacity-0 scale-100"
+                  }`}
               >
                 <img
                   src={s.src}
@@ -196,109 +195,109 @@ export default function Landing() {
 
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
 
-          
+
           <header className="absolute inset-x-0 top-0 z-50">
-  <div className="flex items-center justify-between px-4 sm:px-6 py-8 sm:py-6">
-    {/* Logo block: make it predictable on mobile */}
-    <h1 className="font-lorange text-3xl sm:text-4xl md:text-5xl text-white drop-shadow-lg font-black flex items-center gap-3 whitespace-nowrap">
-      <img
-        src={Logo}
-        alt="L'Orange Rose logo"
-        className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)] shrink-0"
-        decoding="async"
-      />
-    </h1>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-8 sm:py-6">
+              {/* Logo block: make it predictable on mobile */}
+              <h1 className="font-lorange text-3xl sm:text-4xl md:text-5xl text-white drop-shadow-lg font-black flex items-center gap-3 whitespace-nowrap">
+                <img
+                  src={Logo}
+                  alt="L'Orange Rose logo"
+                  className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.45)] shrink-0"
+                  decoding="async"
+                />
+              </h1>
 
-    {/* Desktop nav (unchanged behavior from md+) */}
-    <nav className="hidden md:flex items-center gap-8">
-      <LanguageDropdown />
-      <Link to="menu" className="link-underline link-underline-beige text-xl font-medium">
-        {t("nav.menu")}
-      </Link>
-      <Link to="contact" className="link-underline link-underline-orange text-xl font-medium">
-        {t("nav.contact")}
-      </Link>
-      <Link to="gallery" className="link-underline link-underline-orange text-xl font-medium">
-        {t("nav.gallery")}
-      </Link>
-    </nav>
+              {/* Desktop nav (unchanged behavior from md+) */}
+              <nav className="hidden md:flex items-center gap-8">
+                <LanguageDropdown />
+                <Link to="menu" className="link-underline link-underline-beige text-xl font-medium">
+                  {t("nav.menu")}
+                </Link>
+                <Link to="contact" className="link-underline link-underline-orange text-xl font-medium">
+                  {t("nav.contact")}
+                </Link>
+                <Link to="gallery" className="link-underline link-underline-orange text-xl font-medium">
+                  {t("nav.gallery")}
+                </Link>
+              </nav>
 
-    {/* Mobile hamburger (only <md) */}
-    <button
-      type="button"
-      className="md:hidden inline-flex items-center justify-center rounded-md bg-black/30 hover:bg-black/40 text-white w-10 h-10"
-      aria-label="Open menu"
-      onClick={() => setMobileOpen(true)}
-    >
-      <Menu size={22} />
-    </button>
-  </div>
+              {/* Mobile hamburger (only <md) */}
+              <button
+                type="button"
+                className="md:hidden inline-flex items-center justify-center rounded-md bg-black/30 hover:bg-black/40 text-white w-10 h-10"
+                aria-label="Open menu"
+                onClick={() => setMobileOpen(true)}
+              >
+                <Menu size={22} />
+              </button>
+            </div>
 
-  {/* Mobile menu sheet */}
-  {mobileOpen && (
-    <div className="md:hidden">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50"
-        onClick={() => setMobileOpen(false)}
-        aria-hidden="true"
-      />
-      {/* Panel */}
-      <motion.div
-        initial={{ y: -24, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: -24, opacity: 0 }}
-        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 bg-[#0B0B0B]/95 backdrop-blur px-4 sm:px-6 pt-4 pb-6"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src={Logo}
-              alt="L'Orange Rose logo"
-              className="h-10 w-auto"
-            />
-            <span className="font-legacy text-xl text-white/90">L&apos;Orange Rose</span>
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20 text-white w-10 h-10"
-            aria-label="Close menu"
-            onClick={() => setMobileOpen(false)}
-          >
-            <X size={22} />
-          </button>
-        </div>
+            {/* Mobile menu sheet */}
+            {mobileOpen && (
+              <div className="md:hidden">
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 z-40 bg-black/50"
+                  onClick={() => setMobileOpen(false)}
+                  aria-hidden="true"
+                />
+                {/* Panel */}
+                <motion.div
+                  initial={{ y: -24, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -24, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                  className="fixed top-0 left-0 right-0 z-50 bg-[#0B0B0B]/95 backdrop-blur px-4 sm:px-6 pt-4 pb-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={Logo}
+                        alt="L'Orange Rose logo"
+                        className="h-10 w-auto"
+                      />
+                      <span className="font-legacy text-xl text-white/90">L&apos;Orange Rose</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center rounded-md bg-white/10 hover:bg-white/20 text-white w-10 h-10"
+                      aria-label="Close menu"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <X size={22} />
+                    </button>
+                  </div>
 
-        {/* Links (touch-friendly) */}
-        <div className="mt-4 border-t border-white/10 pt-4 space-y-2">
-          <LanguageDropdown />
-          <Link
-            to="/menu"
-            className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("nav.menu")}
-          </Link>
-          <Link
-            to="/contact"
-            className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("nav.contact")}
-          </Link>
-          <Link
-            to="/gallery"
-            className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
-            onClick={() => setMobileOpen(false)}
-          >
-            {t("nav.gallery")}
-          </Link>
-        </div>
-      </motion.div>
-    </div>
-  )}
-</header>
+                  {/* Links (touch-friendly) */}
+                  <div className="mt-4 border-t border-white/10 pt-4 space-y-2">
+                    <LanguageDropdown />
+                    <Link
+                      to="/menu"
+                      className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {t("nav.menu")}
+                    </Link>
+                    <Link
+                      to="/contact"
+                      className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {t("nav.contact")}
+                    </Link>
+                    <Link
+                      to="/gallery"
+                      className="block px-3 py-3 rounded-md text-lg text-[#F7EBD9] hover:bg-white/10"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {t("nav.gallery")}
+                    </Link>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </header>
 
           {/* Hero content */}
           <div
@@ -306,8 +305,8 @@ export default function Landing() {
             style={{ transform: `translateY(${scrollY * 0.1}px)` }}
           >
             <h2 className="font-lorange text-4xl sm:text-5xl md:text-6xl lg:text-[6.5rem] leading-tight text-red-800 drop-shadow-2xl font-black whitespace-nowrap">
-  L&apos;Orange Rose
-</h2>
+              L&apos;Orange Rose
+            </h2>
             <p className="mt-6 text-white/90 text-xl md:text-2xl lg:text-6xl max-w-[65ch] font-light font-edo">
               {t("hero.tagline")}
             </p>
@@ -382,7 +381,7 @@ export default function Landing() {
                         </>
                       ) : (
                         <div className="p-4 md:p-5">
-                          
+
                           <h4 className="text-lg md:text-xl text-[#0B0B0B] leading-snug mb-1">{a.title}</h4>
                           {a.desc && <p className="text-sm md:text-base text-[#4C0C27] leading-relaxed">{a.desc}</p>}
                         </div>
@@ -421,37 +420,39 @@ export default function Landing() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-14 text-center">
-              <motion.div
+              <motion.a
+                href="tel:+3281634100" // E.164 format for reliability
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ duration: 0.6, ease: easeOutExpo }}
-                className="group"
+                className="group block text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4C0C27]/40 rounded-xl"
+                aria-label={`${t("info.call")}: 081 63 41 00`}
               >
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 group-hover:scale-110 group-hover:bg-[#FFB96B] transition-all duration-300">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-[#FFB96B]">
                   <Phone size={28} className="text-white" />
                 </div>
                 <h4 className="font-legacy text-2xl mb-4 tracking-wide">{t("info.call")}</h4>
-                <a href="tel:+3212345678" className="contact-link text-lg">
-                  +32 12 34 56 78
-                </a>
-              </motion.div>
+                <span className="contact-link text-lg">081 / 63 41 00</span>
+              </motion.a>
 
-              <motion.div
+              <motion.a
+                href="https://www.google.com/maps/place/L'Orange+Rose/@50.5900854,4.9100618,17z/data=!3m2!4b1!5s0x47c1759c40df2da7:0x883dd19e92984529!4m6!3m5!1s0x47c1759c4533df0b:0x63407f6c38127fbf!8m2!3d50.590082!4d4.9126367!16s%2Fg%2F1tfvgc7r?entry=ttu&g_ep=EgoyMDI1MDkxNy4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ duration: 0.6, ease: easeOutExpo }}
-                className="group"
+                className="group block text-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4C0C27]/40"
+                aria-label={`${t("info.viewOnMaps")} – L'Orange Rose`}
               >
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 group-hover:scale-110 group-hover:bg-[#FFB96B] transition-all duration-300">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#C81D25] mb-6 transition-all duration-300 group-hover:scale-110 group-hover:bg-[#FFB96B]">
                   <MapPin size={28} className="text-white" />
                 </div>
                 <h4 className="font-legacy text-2xl mb-4 tracking-wide">{t("info.find")}</h4>
-                <a target="_blank" rel="noreferrer" href="https://maps.google.com" className="contact-link text-lg">
-                  {t("info.viewOnMaps")}
-                </a>
-              </motion.div>
+                <span className="contact-link text-lg">{t("info.viewOnMaps")}</span>
+              </motion.a>
 
               <motion.div
                 initial={{ opacity: 0 }}
@@ -465,10 +466,10 @@ export default function Landing() {
                 </div>
                 <h4 className="font-legacy text-2xl mb-4 tracking-wide">{t("info.follow")}</h4>
                 <div className="flex justify-center gap-8">
-                  <a href="#" className="contact-link text-lg">
+                  <a href="https://www.instagram.com/lorangerose/" className="contact-link text-lg">
                     {t("info.instagram")}
                   </a>
-                  <a href="#" className="contact-link text-lg">
+                  <a href="https://www.facebook.com/p/LOrange-Rose-100064241130233/" className="contact-link text-lg">
                     {t("info.facebook")}
                   </a>
                 </div>

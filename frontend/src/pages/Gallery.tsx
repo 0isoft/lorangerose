@@ -74,7 +74,7 @@ export default function Gallery() {
                             <span className="text-sm font-medium">Back</span>
                         </Link>
                         <a
-                            href="https://instagram.com/"
+                            href="https://www.instagram.com/lorangerose/"
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center gap-2 link-underline text-[#F7EBD9]"
