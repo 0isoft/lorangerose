@@ -203,7 +203,7 @@ export default function ContactPage() {
           {/* Phone */}
           <div className="rounded-2xl border border-[#4C0C27]/20 bg-white/70 p-6">
             <h4 className="font-legacy text-2xl tracking-wide mb-2">{t("contact.reservations")}</h4>
-            <a href="tel:+3212345678" className="text-[#C81D25] text-xl font-semibold">
+            <a href="tel:+3281634100" className="text-[#C81D25] text-xl font-semibold">
               081 / 63 41 00
             </a>
             <p className="text-[#4C0C27] mt-2 text-sm">{t("contact.callUsToBook")}</p>
@@ -318,11 +318,14 @@ function HoursSection() {
     return () => { alive = false; };
   }, []);
 
+
+  //enfore captalization on weekday labels
   const weekdayLabels = useMemo(() => {
-    const base = new Date(2020, 5, 1); // Monday
+    const base = new Date(2020, 5, 1); 
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(base); d.setDate(base.getDate() + i);
-      return new Intl.DateTimeFormat(localeTag, { weekday: "long" }).format(d);
+      const label = new Intl.DateTimeFormat(localeTag, { weekday: "long" }).format(d);
+      return label.charAt(0).toUpperCase() + label.slice(1);
     });
   }, [localeTag]);
 
