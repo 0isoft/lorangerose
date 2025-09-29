@@ -63,7 +63,7 @@ const MESSAGES: Record<Lang, Messages> = {
     fr: {
         nav: { menu: "Carte", contact: "Contact", gallery: "Galerie", language: "Langue" },
         hero: { tagline: "Asian food", explore: "Voir la carte" },
-        about: { title: "À propos", body: "Un beau texte avec de belles phrases sinueuses, descriptives et envoûtantes. Des mets et boissons irrésistibles." },
+        about: { title: "À propos de nous", body: "Un beau texte avec de belles phrases sinueuses, descriptives et envoûtantes. Des mets et boissons irrésistibles." },
         info: {
             visit: "Venez nous voir",
             call: "Appelez-nous",
@@ -97,7 +97,7 @@ const MESSAGES: Record<Lang, Messages> = {
             },
         },
         menu: {
-            title: "Carte",                     // ← the important change
+            title: "Carte",                   
             loading: "Chargement de la carte…",
             comingSoon: "Carte à venir.",
             imageAlt: "Carte de L'Orange Rose",

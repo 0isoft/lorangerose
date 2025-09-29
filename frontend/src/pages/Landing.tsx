@@ -338,13 +338,16 @@ export default function Landing() {
           const rows = [...news].sort((a, b) => {
             const aImg = Boolean(a.mediaAssets?.[0]?.url);
             const bImg = Boolean(b.mediaAssets?.[0]?.url);
-            return Number(bImg) - Number(aImg);
+            return Number(bImg) - Number(aImg)
           });
+
+          const isSingle = rows.length === 1;
+
 
           return (
             <div className="mt-10 px-4 sm:px-6 lg:px-8">
               {/* centered, two columns on md+, with slightly larger cards and tighter gaps */}
-              <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 justify-items-center">
+              <div className={`mx-auto max-w-5xl grid grid-cols-1 ${ isSingle ? "md:grid-cols-1" : "md:grid-cols-2" } gap-4 md:gap-5 justify-items-center`}>
                 {rows.map((a) => {
                   const d = a._date!;
                   const day = new Intl.DateTimeFormat(localeTag, { day: "2-digit" }).format(d);
@@ -352,6 +355,8 @@ export default function Landing() {
 
                   const hero = a.mediaAssets?.[0];
                   const hasImg = !!hero?.url;
+
+                  
 
                   return (
                     <motion.article
