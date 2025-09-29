@@ -682,8 +682,8 @@ function MenuManager() {
     // (B) Toggle publish with a hard client cap of 3
     async function togglePublish(it: MediaAsset) {
         const next = !it.published;
-        if (next && publishedCount >= 3) {
-            alert("Maximum 3 images de menu publiées.");
+        if (next && publishedCount >= 10) {
+            alert("Maximum 10 images de menu publiées.");
             return;
         }
         setWorking(true);
@@ -744,7 +744,7 @@ function MenuManager() {
 
     return (
         <section>
-            <h2 className="font-legacy text-2xl mb-3">Images du menu (max 3 publiées)</h2>
+            <h2 className="font-legacy text-2xl mb-3">Images du menu (max 10 publiées)</h2>
 
             {/* All items with controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -758,7 +758,7 @@ function MenuManager() {
                         <div className="flex items-center gap-2 flex-wrap">
                             <button
                                 onClick={() => togglePublish(it)}
-                                disabled={working || (!it.published && publishedCount >= 3)}
+                                disabled={working || (!it.published && publishedCount >= 10)}
                                 className={`px-2 py-1 rounded text-sm ${it.published ? "bg-green-600 text-white" : "bg-gray-200"
                                     }`}
                                 title={it.published ? "Dépublier" : "Publier"}

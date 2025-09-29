@@ -59,7 +59,7 @@ export default function MenuPage() {
         const res = await fetch("/api/media?type=MENU"); // defaults to 3 server-side
         const data: MediaAsset[] = await res.json();
         if (!alive) return;
-        setImages([...data].sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 3)); // front-end safety
+        setImages([...data].sort((a, b) => a.sortOrder - b.sortOrder).slice(0, 10)); // front-end safety
       } catch {
         // leave empty on error
       } finally {

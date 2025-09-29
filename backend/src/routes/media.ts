@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
     where,
     orderBy: qType ? [{ sortOrder: "asc" }] : [{ type: "asc" }, { sortOrder: "asc" }],
     // default to 3 only for MENU when take is not provided
-    take: qType === "MENU" ? (take ?? 3) : take,
+    take: qType === "MENU" ? (take ?? 10) : take,
   });
 
   res.json(rows);
