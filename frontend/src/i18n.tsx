@@ -24,7 +24,7 @@ const MESSAGES: Record<Lang, Messages> = {
             facebook: "Facebook",
         },
         announcements: {
-            title: "What's happening these days",
+            title: "What's new",
         },
         contact: {
             nav: { home: "Home", menu: "Menu", gallery:"Gallery" },
@@ -56,7 +56,10 @@ const MESSAGES: Record<Lang, Messages> = {
             imageAlt: "L'Orange Rose menu",
           },
         
-        footer: { tagline: "Neon nights • Bold flavors • No filler arcs" },
+          footer: {
+            privacy: "This site does not use cookies or collect personal data.",
+            madeByPrefix: "© {year} {brand} -- website made with care by ",
+          },
         aria: { openLangMenu: "Open language menu" },
         langNames: { en: "English", fr: "Français", nl: "Nederlands" },
     },
@@ -106,7 +109,10 @@ const MESSAGES: Record<Lang, Messages> = {
         announcements: {
             title: "Quoi de neuf",
         },
-        footer: { tagline: "Nuits néon • Saveurs audacieuses • Zéro remplissage" },
+        footer: {
+            privacy: "Ce site n’utilise pas de cookies et ne collecte pas de données personnelles.",
+            madeByPrefix: "© {year} {brand} -- site réalisé avec soin par ",
+          },
         aria: { openLangMenu: "Ouvrir le menu des langues" },
         langNames: { en: "English", fr: "Français", nl: "Nederlands" },
     },
@@ -157,7 +163,10 @@ const MESSAGES: Record<Lang, Messages> = {
             imageAlt: "Menukaart L'Orange Rose",
           },
         
-        footer: { tagline: "Neonnachten • Gedurfde smaken • Geen vulling" },
+          footer: {
+            privacy: "Deze site gebruikt geen cookies en verzamelt geen persoonlijke gegevens.",
+            madeByPrefix: "© {year} {brand} -- website met zorg gemaakt door ",
+          },
         aria: { openLangMenu: "Taalmenu openen" },
         langNames: { en: "English", fr: "Français", nl: "Nederlands" },
     },

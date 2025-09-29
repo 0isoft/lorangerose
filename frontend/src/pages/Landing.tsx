@@ -304,7 +304,10 @@ export default function Landing() {
             className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-6 hero-content"
             style={{ transform: `translateY(${scrollY * 0.1}px)` }}
           >
-            <h2 className="font-lorange text-4xl sm:text-5xl md:text-6xl lg:text-[6.5rem] leading-tight text-red-800 drop-shadow-2xl font-black whitespace-nowrap">
+            <h2
+              className="font-lorange text-4xl sm:text-5xl md:text-6xl lg:text-[6.5rem] leading-tight drop-shadow-2xl font-black whitespace-nowrap"
+              style={{ color: "#C81D25" }}
+            >
               L&apos;Orange Rose
             </h2>
             <p className="mt-6 text-white/90 text-xl md:text-2xl lg:text-6xl max-w-[65ch] font-light font-edo">
@@ -338,16 +341,17 @@ export default function Landing() {
           const rows = [...news].sort((a, b) => {
             const aImg = Boolean(a.mediaAssets?.[0]?.url);
             const bImg = Boolean(b.mediaAssets?.[0]?.url);
-            return Number(bImg) - Number(aImg)
+            return Number(bImg) - Number(aImg);
           });
 
           const isSingle = rows.length === 1;
 
-
           return (
             <div className="mt-10 px-4 sm:px-6 lg:px-8">
-              {/* centered, two columns on md+, with slightly larger cards and tighter gaps */}
-              <div className={`mx-auto max-w-5xl grid grid-cols-1 ${ isSingle ? "md:grid-cols-1" : "md:grid-cols-2" } gap-4 md:gap-5 justify-items-center`}>
+              <div
+                className={`mx-auto max-w-5xl grid grid-cols-1 ${isSingle ? "md:grid-cols-1" : "md:grid-cols-2"
+                  } gap-4 md:gap-5 justify-items-center`}
+              >
                 {rows.map((a) => {
                   const d = a._date!;
                   const day = new Intl.DateTimeFormat(localeTag, { day: "2-digit" }).format(d);
@@ -356,8 +360,6 @@ export default function Landing() {
                   const hero = a.mediaAssets?.[0];
                   const hasImg = !!hero?.url;
 
-                  
-
                   return (
                     <motion.article
                       key={a.id}
@@ -365,7 +367,8 @@ export default function Landing() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, amount: 0.2 }}
                       transition={{ duration: 0.35, ease: easeOutExpo }}
-                      className="group relative w-full max-w-[29rem] overflow-hidden border border-[#4C0C27]/15 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all rounded-none"
+                      className={`group relative w-full overflow-hidden border border-[#4C0C27]/15 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all rounded-none
+                ${isSingle ? "max-w-[36rem] lg:max-w-[42rem]" : "max-w-[29rem]"}`}
                     >
                       {hasImg ? (
                         <>
@@ -386,7 +389,6 @@ export default function Landing() {
                         </>
                       ) : (
                         <div className="p-4 md:p-5">
-
                           <h4 className="text-lg md:text-xl text-[#0B0B0B] leading-snug mb-1">{a.title}</h4>
                           {a.desc && <p className="text-sm md:text-base text-[#4C0C27] leading-relaxed">{a.desc}</p>}
                         </div>
@@ -486,16 +488,32 @@ export default function Landing() {
         {/* Footer */}
         <footer className="border-t border-[#4C0C27]/20 bg-[#F7EBD9] text-[#4C0C27]">
           <div className="mx-auto max-w-6xl px-6 lg:px-8 py-16 flex flex-col sm:flex-row items-center justify-between gap-8">
+            {/* Left: logo + brand */}
             <div className="flex items-center gap-4">
               <img src={Logo} alt="L'Orange Rose" className="h-12" />
               <span className="font-legacy text-2xl lg:text-3xl tracking-wide">L&apos;Orange Rose</span>
             </div>
-            <p className="text-[#4C0C27]/70 text-sm lg:text-base font-light">
-              © {new Date().getFullYear()} — {t("footer.tagline")}
-            </p>
+
+            {/* Right: text block with two lines */}
+            <div className="text-[#4C0C27]/70 text-sm lg:text-base font-light text-center sm:text-right">
+              <p>{t("footer.privacy")}</p>
+              <p>
+                {t("footer.madeByPrefix", {
+                  year: new Date().getFullYear(),
+                  brand: "L'Orange Rose",
+                })}
+                <a
+                  href="https://octaviangurlui.be"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-[#C81D25]"
+                >
+                  Octavian Gurlui
+                </a>
+              </p>
+            </div>
           </div>
         </footer>
-
         {/* Local styles for links */}
         <style>{`
           .contact-link { position: relative; color: #FFB96B; text-decoration: none; transition: color 0.3s ease; }
