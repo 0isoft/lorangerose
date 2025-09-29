@@ -25,9 +25,12 @@ function toFrontendSlot(s: BackendSlot): Slot {
   return "all"; // "ALL"
 }
 
-function isoDateFromDateTime(dt: string): string {
-  const d = new Date(dt);
-  return toISODate(d);
+function isoDateFromDateTime(d: string | Date) {
+  const date = typeof d === "string" ? new Date(d) : d;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -319,7 +322,7 @@ function HoursSection() {
   }, []);
 
 
-  //enfore captalization on weekday labels
+  //enfore captalization on weeekdays
   const weekdayLabels = useMemo(() => {
     const base = new Date(2020, 5, 1); 
     return Array.from({ length: 7 }, (_, i) => {
@@ -371,24 +374,56 @@ function HoursSection() {
 function ReadOnlyClosuresCalendar() {
   const { t, localeTag } = useI18n();
   const [refDate, setRefDate] = useState(startOfMonth(new Date()));
-  const [closures, setClosures] = useState<Record<string, Slot>>({});
+
+  // NEW: keep slot + kind per day
+  type Slot = "all" | "lunch" | "dinner";
+  type Kind = "EXCEPTIONAL" | "RECURRING" | "OTHER";
+  type DayEntry = { slot: Slot; kind: Kind };
+
+  const [closures, setClosures] = useState<Record<string, DayEntry>>({});
+
+  // helpers for precedence
+  const slotRank = (s: Slot) => (s === "all" ? 3 : s === "dinner" ? 2 : 1);
+  const kindRank = (k: Kind) => (k === "EXCEPTIONAL" ? 3 : k === "RECURRING" ? 2 : 1);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         const res = await fetch("/api/closures");
-        const data: BackendClosure[] = await res.json();
+        const data: Array<{
+          id: string;
+          date: string | Date;
+          slot: "ALL" | "LUNCH" | "DINNER";
+          note?: string | null;
+          kind?: "EXCEPTIONAL" | "RECURRING"; // optional if you didn't add it yet
+        }> = await res.json();
         if (!alive) return;
 
-        const map: Record<string, Slot> = {};
+        const map = new Map<string, DayEntry>();
+
         for (const c of data) {
           const iso = isoDateFromDateTime(c.date);
-          const incoming = toFrontendSlot(c.slot);
-          if (!map[iso]) map[iso] = incoming;
-          else if (map[iso] !== incoming) map[iso] = "all";
+          const slot: Slot = c.slot === "ALL" ? "all" : c.slot === "LUNCH" ? "lunch" : "dinner";
+          // if backend doesn't send kind yet, infer from id
+          const kind: Kind = c.kind ?? (c.id.startsWith("rec_") ? "RECURRING" : "EXCEPTIONAL");
+
+          const incoming: DayEntry = { slot, kind };
+          const prev = map.get(iso);
+
+          if (!prev) {
+            map.set(iso, incoming);
+          } else {
+            // precedence: EXCEPTIONAL > RECURRING; tie-break with slot breadth
+            if (kindRank(incoming.kind) > kindRank(prev.kind)) {
+              map.set(iso, incoming);
+            } else if (kindRank(incoming.kind) === kindRank(prev.kind)) {
+              map.set(iso, slotRank(incoming.slot) >= slotRank(prev.slot) ? incoming : prev);
+            }
+          }
         }
-        setClosures(map);
+
+        setClosures(Object.fromEntries(map));
       } catch {
         // keep empty on error
       }
@@ -398,20 +433,19 @@ function ReadOnlyClosuresCalendar() {
 
   const weeks = useMemo(() => buildCalendar(refDate), [refDate]);
 
-  // localized weekday header (Mon–Sun) using Intl
+  // Weekday header (unchanged)
   const weekdayLabels = useMemo(() => {
     const base = new Date(2020, 5, 1); // Mon Jun 1, 2020
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(base);
       d.setDate(base.getDate() + i);
-      // short weekday in current locale
       return new Intl.DateTimeFormat(localeTag, { weekday: "short" }).format(d);
     });
   }, [localeTag]);
 
   return (
     <div className="rounded-2xl border border-[#4C0C27]/20 bg:white/70 bg-white/70 p-3 md:p-6">
-      {/* Compact header with month selection */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2">
           <button
@@ -432,10 +466,13 @@ function ReadOnlyClosuresCalendar() {
             →
           </button>
         </div>
+
+        {/* NEW legend (French only, simple) */}
         <div className="hidden md:flex items-center gap-4 text-sm text-[#4C0C27]">
-          <LegendSwatch color="#FFB96B" label={t("contact.legend.lunch")} />
-          <LegendSwatch color="#C81D25" label={t("contact.legend.dinner")} />
-          <LegendSwatch color="#4C0C27" label={t("contact.legend.all")} />
+          <LegendSwatch color="#A26BF5" label="Récurrent (toute la journée)" />
+          <LegendSwatch color="#FFB96B" label="Récurrent (midi)" />
+          <LegendSwatch color="#4C0C27" label="Exceptionnelle" />
+          {/* Intentionally no legend for 'autres' (gris) */}
         </div>
       </div>
 
@@ -450,7 +487,7 @@ function ReadOnlyClosuresCalendar() {
       <div className="grid grid-cols-7 text-center">
         {weeks.flat().map((cell, idx) => {
           const iso = cell?.iso;
-          const slot = iso ? closures[iso] : undefined;
+          const entry = iso ? closures[iso] : undefined;
           const isOtherMonth = cell && cell.date.getMonth() !== refDate.getMonth();
 
           return (
@@ -458,7 +495,7 @@ function ReadOnlyClosuresCalendar() {
               key={cell ? iso : `empty-${idx}`}
               className={`relative border border-[#4C0C27]/10
                           ${isOtherMonth ? "bg-white/40 text-[#4C0C27]/50" : "bg-white/80 text-[#0B0B0B]"}
-                          ${slot ? "font-semibold" : ""} transition`}
+                          ${entry ? "font-semibold" : ""} transition`}
               style={{ aspectRatio: "1 / 1", padding: "2px" }}
             >
               {cell && (
@@ -466,10 +503,10 @@ function ReadOnlyClosuresCalendar() {
                   <span className="absolute top-1 left-1 text-[10px] md:text-xs">
                     {cell.date.toLocaleDateString(localeTag, { day: "2-digit" })}
                   </span>
-                  {slot && (
+                  {entry && (
                     <span
                       className="absolute left-1 right-1 bottom-1 rounded"
-                      style={{ height: "70%", backgroundColor: slotColor(slot) }}
+                      style={{ height: "70%", backgroundColor: dayColor(entry.kind, entry.slot) }}
                     />
                   )}
                 </>
@@ -479,17 +516,34 @@ function ReadOnlyClosuresCalendar() {
         })}
       </div>
 
-      {/* Legend (mobile) */}
+      {/* Mobile legend */}
       <div className="mt-3 flex md:hidden items-center gap-3 justify-center text-[11px] text-[#4C0C27]">
-        <LegendSwatch color="#FFB96B" label={t("contact.legend.lunch")} />
-        <LegendSwatch color="#C81D25" label={t("contact.legend.dinner")} />
-        <LegendSwatch color="#4C0C27" label={t("contact.legend.all")} />
+        <LegendSwatch color="#A26BF5" label="Récurrent (toute la journée)" />
+        <LegendSwatch color="#FFB96B" label="Récurrent (midi)" />
+        <LegendSwatch color="#4C0C27" label="Exceptionnelle" />
       </div>
-
-
     </div>
   );
 }
+
+/* ---------- helpers ---------- */
+
+
+
+// NEW: color by (kind, slot). 'Other' stays unlisted in legend.
+function dayColor(kind: "EXCEPTIONAL" | "RECURRING" | "OTHER", slot: "all" | "lunch" | "dinner") {
+  if (kind === "EXCEPTIONAL") return "#4C0C27";      // Exceptionnelle
+  if (kind === "RECURRING") {
+    if (slot === "all")   return "#A26BF5";          // Récurrent – toute la journée
+    if (slot === "lunch") return "#FFB96B";          // Récurrent – midi
+    // dinner or anything else = 'autres'
+    return "#9CA3AF";                                // Autres (gris, non listé)
+  }
+  return "#9CA3AF";                                  // OTHER fallback
+}
+
+// ...startOfMonth, addMonths, toISODate, formatISOToDisplay, buildCalendar unchanged
+
 
 /* ---------- helpers ---------- */
 
