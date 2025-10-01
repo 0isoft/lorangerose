@@ -315,12 +315,7 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
             className="block w-full h-auto select-none"
           />
   
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/0 via-black/0 to-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          {asset.alt && (
-            <figcaption className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-[13px] sm:text-sm text-white/95 drop-shadow">
-              {asset.alt}
-            </figcaption>
-          )}
+          
         </div>
   
         <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10 group-hover:ring-white/30 transition-all duration-300" />
