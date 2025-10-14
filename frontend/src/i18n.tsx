@@ -13,7 +13,7 @@ const MESSAGES: Record<Lang, Messages> = {
     en: {
         nav: { menu: "Menu", contact: "Contact", gallery: "Gallery", language: "Language" },
         hero: { tagline: "Asian Food", explore: "Explore Menu" },
-        about: { title: "About Us", body: "A nice text, with nice long meandering phrases, descriptive, mesmerising, scintillating vocabulary. Tantalizing food and drinks." },
+        about: { title: "About Us", body: "test in prod" },
         info: {
             visit: "Visit Us",
             call: "Call Us",
