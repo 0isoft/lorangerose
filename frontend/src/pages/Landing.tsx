@@ -402,21 +402,21 @@ export default function Landing() {
         })()}
 
         {/* ABOUT */}
-        <section id="about" className="relative mx-auto max-w-6xl px-6 lg:px-8 py-24">
-          <SectionHeading>{t("about.title")}</SectionHeading>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, ease: easeOutExpo }}
-            className="mt-10 text-center max-w-4xl mx-auto"
-          >
-            <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed text-[#0B0B0B] font-light tracking-wide">
-              {t("about.body")}
-            </p>
-            <div className="mt-12 w-32 h-px bg-gradient-to-r from-transparent via-[#C81D25] to-transparent mx-auto" />
-          </motion.div>
-        </section>
+        <section id="about" className="relative mx-auto w-[90%] px-6 lg:px-8 py-24">
+  <SectionHeading>{t("about.title")}</SectionHeading>
+  <motion.div
+    initial={{ opacity: 0, y: 24 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-80px" }}
+    transition={{ duration: 0.6, ease: easeOutExpo }}
+    className="mt-10 text-center mx-auto"
+  >
+    <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed text-[#0B0B0B] font-light tracking-wide whitespace-pre-wrap">
+  {t("about.body")}
+</p>
+    <div className="mt-12 w-32 h-px bg-gradient-to-r from-transparent via-[#C81D25] to-transparent mx-auto" />
+  </motion.div>
+</section>
 
         {/* INFO / CTA */}
         <section id="info" className="bg-[#0B0B0B] text-[#F7EBD9]">
