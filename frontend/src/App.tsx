@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import Contact from "./pages/Contact";
 import Menu from "./pages/Menu";
 import Gallery from "./pages/Gallery";
+import { useLocation } from 'react-router-dom';
 
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -15,8 +16,24 @@ import { I18nProvider } from "@/i18n";
 
 import Logo from "@/assets/essentials/orangerose_logo-removebg-preview.png";
 
+function usePageTracking() {
+  const location = useLocation();
+
+  useEffect(() => {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        path: location.pathname,
+      }),
+    }).catch(() => {}); // silently fail
+  }, [location.pathname]);
+}
 
 export default function App() {
+  usePageTracking(); //enable
+
   useEffect(() => {
     const link: HTMLLinkElement =
       document.querySelector("link[rel*='icon']") || document.createElement("link");
