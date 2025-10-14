@@ -109,7 +109,7 @@ export default function Gallery() {
                             animate={{ opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay: 0.15 } }}
                             className="mt-4 max-w-3xl text-lg md:text-xl text-[#F7EBD9]/80"
                         >
-                            Some nice words about the place, we are even nicer in person!
+                            
                         </motion.p>
                     </div>
                 </section>

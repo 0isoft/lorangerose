@@ -469,9 +469,9 @@ function ReadOnlyClosuresCalendar() {
 
         {/* NEW legend (French only, simple) */}
         <div className="hidden md:flex items-center gap-4 text-sm text-[#4C0C27]">
-          <LegendSwatch color="#A26BF5" label="Récurrent (toute la journée)" />
-          <LegendSwatch color="#FFB96B" label="Récurrent (midi)" />
-          <LegendSwatch color="#4C0C27" label="Exceptionnelle" />
+          <LegendSwatch color="#A26BF5" label="Fermé toute la journée" />
+          <LegendSwatch color="#FFB96B" label="Fermé à midi" />
+          <LegendSwatch color="#4C0C27" label="Fermé" />
           {/* Intentionally no legend for 'autres' (gris) */}
         </div>
       </div>
