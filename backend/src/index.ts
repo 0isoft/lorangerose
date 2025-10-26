@@ -1,3 +1,21 @@
+/**
+ * @file index.ts
+ * @brief Main entrypoint for the Express REST API server.
+ * @details
+ * - Loads environment variables and configures the Express app.
+ * - Applies middleware including cookie handling, CORS, JSON parsing, and rate limiting.
+ * - Mounts public and admin API routes for authentication, announcements, closures, media, gallery, business hours, analytics, and uploads.
+ * - Exposes health and debug endpoints.
+ * - Starts the HTTP server.
+ * 
+ * @author
+ *   0isoft
+ * @date
+ *   2025
+ * @version
+ *   1.0
+ */
+
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -21,15 +39,28 @@ import adminHours from "./routes/admin/hours"
 import { trackHit } from "./analytics";   
 import rateLimit from "express-rate-limit";
 import adminAnalytics from "./routes/admin/analytics";
-
 import prisma from "./lib/prisma"
 
+/**
+ * @brief Express rate limiter for analytics tracking.
+ * @details
+ *   - Limits requests to the /api/track endpoint to 120 per IP per 60 seconds.
+ *   - Uses standard HTTP rate limit headers.
+ */
 const trackLimiter = rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: true, legacyHeaders: false });
 
-
-
+/**
+ * @brief Instance of the Express application.
+ */
 const app = express();
 
+/**
+ * @brief Debug middleware logs incoming HTTP requests.
+ * @details Logs the request method, URL, host, and whether cookies are present.
+ * @param req Express Request
+ * @param _res Express Response
+ * @param next Next middleware callback
+ */
 app.use((req, _res, next) => {
   console.log('[DEBUG]', req.method, req.url,
     'Host:', req.headers.host,
@@ -40,16 +71,32 @@ app.use((req, _res, next) => {
 app.set("trust proxy", true);
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
-app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || true,
+  credentials: true,
+}));
 
-// Ensure uploads dir exists (for local/dev disk storage)
+/**
+ * @brief Ensures the uploads directory exists for hosting static uploaded files.
+ * @details
+ *   - Creates the "uploads" directory if it does not exist, supporting local/dev disk storage.
+ *   - Serves files under /uploads.
+ */
 const uploadsDir = path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use("/uploads", express.static(uploadsDir));
 
+/**
+ * @brief Health check endpoint.
+ * @route GET /health
+ * @returns {object} { ok: true } Indicates the API is running.
+ */
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-// Public content
+/**
+ * @name Public API Endpoints
+ * @brief Mounts routers for public-facing APIs.
+ */
 app.use("/api/auth", authRouter);
 app.use("/api/announcements", announcementsPublic);
 app.use("/api/closures", closuresPublic);
@@ -57,7 +104,13 @@ app.use("/api/media", mediaPublic);
 app.use("/api/gallery", galleryPublic);
 app.use("/api/hours", hours);
 
-// Admin CRUD
+/**
+ * @name Admin API Endpoints
+ * @brief Mounts routers for admin (protected) APIs.
+ * @details
+ *   - requireAdmin middleware restricts access to authenticated admin users.
+ *   - Includes CRUD endpoints for announcements, closures, media, gallery, recurring closures, business hours, and analytics.
+ */
 app.use("/api/admin/announcements", requireAdmin, adminAnnouncements);
 app.use("/api/admin/closures", requireAdmin, adminClosures);
 app.use("/api/admin/media", requireAdmin, adminMedia);
@@ -67,12 +120,26 @@ app.use("/api/admin/hours", adminHours)
 app.post("/api/track", trackLimiter, trackHit);
 app.use("/api/admin/analytics", requireAdmin, adminAnalytics);
 
-
+/**
+ * @brief Starts the HTTP server and listens for incoming requests.
+ * @details
+ *   - Uses PORT environment variable or defaults to 3000.
+ *   - Binds on all network interfaces (0.0.0.0).
+ */
 const PORT = process.env.PORT || 3000;
 app.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`API listening on http://0.0.0.0:${PORT}`);
 });
 
+/**
+ * @brief Debug-only endpoint for database connection and server info.
+ * @route GET /debug/db
+ * @returns {object} Database and connection information.
+ *   - db: current database name
+ *   - usr: database user
+ *   - addr: server address
+ *   - port: server port
+ */
 app.get("/debug/db", async (_req, res) => {
   const [info] = await prisma.$queryRawUnsafe<any[]>(
     `SELECT current_database() AS db,

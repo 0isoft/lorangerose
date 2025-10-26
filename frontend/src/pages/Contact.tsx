@@ -19,13 +19,36 @@ type BackendClosure = {
   note?: string | null;
 };
 
+/**
+ * @typedef {"ALL" | "LUNCH" | "DINNER"} BackendSlot
+ * BackendSlot represents slot values returned from the backend API.
+ */
+
+/**
+ * @typedef {Object} BackendClosure
+ * @property {string} id - Unique identifier for the closure.
+ * @property {string} date - ISO DateTime string representing the date of closure.
+ * @property {BackendSlot} slot - Enum from database specifying slot of closure.
+ * @property {string | null} [note] - Optional note regarding closure.
+ */
+
+/**
+ * Converts a backend slot value into a frontend Slot string.
+ * @param {BackendSlot} s - The slot as returned from the backend.
+ * @returns {Slot} Corresponding frontend slot value.
+ */
 function toFrontendSlot(s: BackendSlot): Slot {
   if (s === "LUNCH") return "lunch";
   if (s === "DINNER") return "dinner";
   return "all"; // "ALL"
 }
 
-function isoDateFromDateTime(d: string | Date) {
+/**
+ * Converts an ISO DateTime string or Date object to an ISO date string (YYYY-MM-DD).
+ * @param {string | Date} d - Source date (as string or Date object).
+ * @returns {string} ISO date string (YYYY-MM-DD).
+ */
+function isoDateFromDateTime(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -33,6 +56,12 @@ function isoDateFromDateTime(d: string | Date) {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Displays a decorative section heading.
+ * @param {object} props
+ * @param {React.ReactNode} props.children - The heading content to render.
+ * @returns {JSX.Element}
+ */
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative mx-[calc(50%-50vw)] px-6 py-12 sm:py-16 overflow-x-clip">
@@ -64,6 +93,12 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 /* ---------- Page ---------- */
 
+/**
+ * Main contact page for L'Orange Rose.
+ * Presents contact info, menu navigation, hours, and closures calendar.
+ * @component
+ * @returns {JSX.Element}
+ */
 export default function ContactPage() {
   const { t, lang, localeTag } = useI18n() as any;
 
@@ -292,9 +327,21 @@ export default function ContactPage() {
 }
 
 /* ---------- Read-only Calendar ---------- */
+
+/**
+ * Displays operating hours in a table for each weekday.
+ * Fetches from `/api/hours`.
+ * @component
+ * @returns {JSX.Element}
+ */
 function HoursSection() {
   const { t, localeTag } = useI18n();
 
+  /**
+   * @typedef {Object} PublicRow
+   * @property {number} weekday - 0 = Monday, ..., 6 = Sunday
+   * @property {string} text - The hours text for the weekday
+   */
   type PublicRow = { weekday: number; text: string };
 
   const [hours, setHours] = useState<PublicRow[] | null>(null);
@@ -322,7 +369,7 @@ function HoursSection() {
   }, []);
 
 
-  //enfore captalization on weeekdays
+  //enforce capitalization on weekdays
   const weekdayLabels = useMemo(() => {
     const base = new Date(2020, 5, 1); 
     return Array.from({ length: 7 }, (_, i) => {
@@ -369,21 +416,41 @@ function HoursSection() {
   );
 }
 
-
-
+/**
+ * Read-only calendar showing closure days of the restaurant.
+ * Fetches from `/api/closures` and color-codes accordingly.
+ * @component
+ * @returns {JSX.Element}
+ */
 function ReadOnlyClosuresCalendar() {
   const { t, localeTag } = useI18n();
   const [refDate, setRefDate] = useState(startOfMonth(new Date()));
 
   // NEW: keep slot + kind per day
+  /**
+   * @typedef {"all" | "lunch" | "dinner"} Slot
+   * @typedef {"EXCEPTIONAL" | "RECURRING" | "OTHER"} Kind
+   * @typedef {Object} DayEntry
+   * @property {Slot} slot
+   * @property {Kind} kind
+   */
   type Slot = "all" | "lunch" | "dinner";
   type Kind = "EXCEPTIONAL" | "RECURRING" | "OTHER";
   type DayEntry = { slot: Slot; kind: Kind };
 
   const [closures, setClosures] = useState<Record<string, DayEntry>>({});
 
-  // helpers for precedence
+  /**
+   * Returns a numeric rank for a Slot to compare slot breadth.
+   * @param {Slot} s
+   * @returns {number}
+   */
   const slotRank = (s: Slot) => (s === "all" ? 3 : s === "dinner" ? 2 : 1);
+  /**
+   * Returns a numeric rank for a Kind to compare kind precedence.
+   * @param {Kind} k
+   * @returns {number}
+   */
   const kindRank = (k: Kind) => (k === "EXCEPTIONAL" ? 3 : k === "RECURRING" ? 2 : 1);
 
   useEffect(() => {
@@ -396,7 +463,7 @@ function ReadOnlyClosuresCalendar() {
           date: string | Date;
           slot: "ALL" | "LUNCH" | "DINNER";
           note?: string | null;
-          kind?: "EXCEPTIONAL" | "RECURRING"; // optional if you didn't add it yet
+          kind?: "EXCEPTIONAL" | "RECURRING";
         }> = await res.json();
         if (!alive) return;
 
@@ -528,9 +595,13 @@ function ReadOnlyClosuresCalendar() {
 
 /* ---------- helpers ---------- */
 
-
-
-// NEW: color by (kind, slot). 'Other' stays unlisted in legend.
+/**
+ * Returns color for a calendar day based on kind and slot.
+ * 'Other' stays unlisted in legend.
+ * @param {"EXCEPTIONAL" | "RECURRING" | "OTHER"} kind
+ * @param {"all" | "lunch" | "dinner"} slot
+ * @returns {string} Hex color string
+ */
 function dayColor(kind: "EXCEPTIONAL" | "RECURRING" | "OTHER", slot: "all" | "lunch" | "dinner") {
   if (kind === "EXCEPTIONAL") return "#4C0C27";      // Exceptionnelle
   if (kind === "RECURRING") {
@@ -544,9 +615,15 @@ function dayColor(kind: "EXCEPTIONAL" | "RECURRING" | "OTHER", slot: "all" | "lu
 
 // ...startOfMonth, addMonths, toISODate, formatISOToDisplay, buildCalendar unchanged
 
-
 /* ---------- helpers ---------- */
 
+/**
+ * Swatch label for legend. Displays color and description.
+ * @param {object} props
+ * @param {string} props.color - Hex color string for the swatch.
+ * @param {string} props.label - Description label for the swatch.
+ * @returns {JSX.Element}
+ */
 function LegendSwatch({ color, label }: { color: string; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -555,29 +632,68 @@ function LegendSwatch({ color, label }: { color: string; label: string }) {
     </span>
   );
 }
-function slotColor(slot: Slot) {
+
+/**
+ * Returns a representative hex color for a slot.
+ * @param {Slot} slot
+ * @returns {string}
+ */
+function slotColor(slot: Slot): string {
   if (slot === "lunch") return "#FFB96B";
   if (slot === "dinner") return "#C81D25";
   return "#4C0C27";
 }
-function slotLabel(slot: Slot, t: (k: string) => string) {
+
+/**
+ * Returns the slot label using t for i18n.
+ * @param {Slot} slot
+ * @param {(k: string) => string} t - translation function
+ * @returns {string}
+ */
+function slotLabel(slot: Slot, t: (k: string) => string): string {
   if (slot === "lunch") return t("contact.legend.lunch");
   if (slot === "dinner") return t("contact.legend.dinner");
   return `${t("contact.legend.all")} (${/* all-day clarifier */ ""})`;
 }
-function startOfMonth(d: Date) {
+
+/**
+ * Returns a new Date representing the first of the month.
+ * @param {Date} d - Source date.
+ * @returns {Date}
+ */
+function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
-function addMonths(d: Date, delta: number) {
+
+/**
+ * Returns a new Date shifted by delta months.
+ * @param {Date} d - Source date.
+ * @param {number} delta - Number of months to add (can be negative).
+ * @returns {Date}
+ */
+function addMonths(d: Date, delta: number): Date {
   return new Date(d.getFullYear(), d.getMonth() + delta, 1);
 }
-function toISODate(d: Date) {
+
+/**
+ * Converts a Date to ISO date string (YYYY-MM-DD).
+ * @param {Date} d
+ * @returns {string}
+ */
+function toISODate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
-function formatISOToDisplay(iso: string, localeTag: string) {
+
+/**
+ * Formats ISO string to localized display string.
+ * @param {string} iso - ISO date string (YYYY-MM-DD).
+ * @param {string} localeTag - i18n locale.
+ * @returns {string}
+ */
+function formatISOToDisplay(iso: string, localeTag: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
   return dt.toLocaleDateString(localeTag, {
@@ -587,8 +703,14 @@ function formatISOToDisplay(iso: string, localeTag: string) {
     year: "numeric",
   });
 }
-/** 6x7 matrix Mon–Sun; null pads */
-function buildCalendar(ref: Date) {
+
+/**
+ * Builds a 6x7 array for the weeks of a month with null pads.
+ * Each cell is either {date, iso} or null.
+ * @param {Date} ref - Any date in the target month.
+ * @returns {Array<Array<{date: Date, iso: string} | null>>} 2D array of calendar weeks
+ */
+function buildCalendar(ref: Date): Array<Array<{ date: Date; iso: string } | null>> {
   const first = startOfMonth(ref);
   const firstWeekday = (first.getDay() + 6) % 7; // Mon=0
   const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();

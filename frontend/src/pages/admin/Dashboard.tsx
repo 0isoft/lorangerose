@@ -71,10 +71,33 @@ const SECTIONS: { key: SectionKey; label: string }[] = [
     { key: "analytics", label: "Analytics" },
 ];
 
+/**
+ * @file Dashboard.tsx
+ * @brief Contains the main admin dashboard wrapper for the L'Orange Rose website, rendering sidebar navigation and section panels.
+ */
+
+/**
+ * @function AdminDashboard
+ * @brief Top-level dashboard component providing admin sections for carousel, announcements, schedule, gallery, menu, and analytics.
+ *        Maintains sidebar navigation and keeps all section panels mounted to preserve form state.
+ *
+ * @returns {JSX.Element} The rendered admin dashboard page.
+ *
+ * @details
+ * - Handles authentication logout.
+ * - Utilizes a sidebar for section navigation.
+ * - Displays the correct section based on selected navigation, but keeps all sections mounted to maintain any local state/forms.
+ */
 export default function AdminDashboard() {
     const nav = useNavigate();
+    /** @var {SectionKey} active - The currently active admin section. */
     const [active, setActive] = useState<SectionKey>("carousel");
 
+    /**
+     * @function logout
+     * @brief Logs the user out by POSTing to the logout endpoint and navigates to the login page.
+     * @returns {Promise<void>}
+     */
     async function logout() {
         await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
         nav("/admin/login", { replace: true });
@@ -82,6 +105,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-[#F7EBD9] text-[#0B0B0B]">
+            {/* Dashboard Header */}
             <header className="sticky top-0 z-40 bg-[#F7EBD9]/95 backdrop-blur border-b border-[#4C0C27]/10">
                 <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
                     <div className="font-legacy text-xl">Tableau de bord</div>
@@ -94,18 +118,20 @@ export default function AdminDashboard() {
                 </div>
             </header>
 
+            {/* Main content area */}
             <main className="mx-auto max-w-7xl px-6 py-8">
                 <div className="grid grid-cols-12 gap-6">
-                    {/* Sidebar */}
+                    {/* Sidebar navigation */}
                     <aside className="col-span-12 md:col-span-3">
                         <div className="md:sticky md:top-20">
                             <SidebarNav active={active} onSelect={setActive} />
                         </div>
                     </aside>
 
-                    {/* Content well */}
+                    {/* Section panels (kept mounted) */}
                     <section className="col-span-12 md:col-span-9 space-y-10">
-                        {/* Keep all sections mounted to preserve form state; toggle visibility with CSS */}
+                        {/* All sections below are always mounted for form state preservation.
+                            Visibility is controlled via CSS class "hidden". */}
                         <div className={active === "carousel" ? "" : "hidden"}>
                             <HeroCarouselManager />
                         </div>
@@ -136,7 +162,18 @@ export default function AdminDashboard() {
     );
 }
 
-/** ---------- Sidebar component ---------- */
+/**
+ * @brief Renders the sidebar navigation component for the admin dashboard.
+ * 
+ * Provides navigation between different dashboard sections via an accessible vertical button menu.
+ * The active section is visually highlighted, and navigation updates are performed via the passed callback.
+ *
+ * @param {Object} props - Component props.
+ * @param {SectionKey} props.active - The currently active dashboard section key.
+ * @param {(k: SectionKey) => void} props.onSelect - Callback function invoked with the section key when a sidebar button is clicked.
+ * 
+ * @returns {JSX.Element} Rendered sidebar navigation.
+ */
 function SidebarNav({
     active,
     onSelect,
@@ -174,16 +211,35 @@ function SidebarNav({
     );
 }
 
-/** ---------- Schedule container with inner tabs ---------- */
+/**
+ * @brief SchedulePanel component providing an admin panel section for managing business hours and closures.
+ *
+ * This component displays a set of tabs allowing the admin to switch between managing:
+ *   - business hours
+ *   - exceptional closures
+ *   - recurring closures
+ * 
+ * Each section is handled by a corresponding management component. The UI features a segmented control
+ * for tab navigation, and all manager components remain mounted in the DOM for better state/control consistency,
+ * toggling visibility as needed.
+ *
+ * @component
+ * @returns {JSX.Element} Schedule admin panel section with tabbed navigation for business hours and closures.
+ */
 function SchedulePanel() {
+    /**
+     * @typedef {"hours"|"closures"|"recurring"} Tab
+     * @brief Represents the possible inner tabs in the schedule panel.
+     */
     type Tab = "hours" | "closures" | "recurring";
+    /** @var {Tab} tab - Currently selected tab in the schedule panel. */
     const [tab, setTab] = useState<Tab>("hours");
 
     return (
         <section>
             <h2 className="font-legacy text-2xl mb-3">Horaires & Fermetures</h2>
 
-            {/* Segmented control */}
+            {/* Segmented control for tab navigation */}
             <div className="mb-4 inline-flex rounded-xl border border-[#4C0C27]/20 bg-white/60 p-1">
                 {([
                     { k: "hours", label: "Horaires" },
@@ -208,7 +264,7 @@ function SchedulePanel() {
                 })}
             </div>
 
-            {/* Keep sub-sections mounted; just hide/show */}
+            {/* Display corresponding manager for the active tab. All sub-sections remain mounted for state consistency. */}
             <div className={tab === "hours" ? "" : "hidden"}>
                 <BusinessHoursManager />
             </div>
@@ -222,22 +278,44 @@ function SchedulePanel() {
     );
 }
 
-/** ---------- (Your existing managers below remain UNCHANGED) ----------
- * HeroCarouselManager, GalleryManager, MenuManager, AnnouncementsManager,
- * BusinessHoursManager, ClosuresManager, RecurringClosuresManager,
- * helpers (asDateTime, parseYMD), etc.
- * ------------------------------------------------------------------- */
-
-// ... keep the rest of your file exactly as-is ...
 
 
-/** ---------- HERO CAROUSEL (multi-image, add/remove/reorder/toggle publish) ---------- */
+/**
+ * @brief HeroCarouselManager manages the home page hero image carousel for admin users.
+ * 
+ * Provides CRUD, ordering, and publishing controls for carousel images. 
+ * Allows staging for multiple image uploads. 
+ * Users can change image order, alt text, and publish/unpublish images.
+ *
+ * @component
+ * @returns {JSX.Element}
+ */
 function HeroCarouselManager() {
+    /**
+     * @var {MediaAsset[]} items
+     * List of current hero images in the carousel, sorted by sortOrder.
+     */
     const [items, setItems] = useState<MediaAsset[]>([]);
+    /**
+     * @var {File[]} staged
+     * Array of File objects uploaded by the user, staged for upload.
+     */
     const [staged, setStaged] = useState<File[]>([]);
+    /**
+     * @var {boolean} uploading
+     * Flag indicating whether a bulk upload is currently in progress.
+     */
     const [uploading, setUploading] = useState(false);
+    /**
+     * @var {string|null} saving
+     * Holds the ID of the image being processed (for publish/order/alt), or null if idle.
+     */
     const [saving, setSaving] = useState<string | null>(null);
 
+    /**
+     * @brief Fetches current carousel items from the server, sorts them, and stores in state.
+     * @returns {Promise<void>}
+     */
     async function load() {
         const res = await fetch("/api/admin/media?type=HERO", { credentials: "include" });
         const data: MediaAsset[] = await res.json();
@@ -245,16 +323,32 @@ function HeroCarouselManager() {
     }
     useEffect(() => { load(); }, []);
 
+    /**
+     * @brief Handles file selection via input[type=file] dialog. Appends files to staging area.
+     * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event.
+     * @returns {void}
+     */
     function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
         const files = Array.from(e.target.files || []);
         if (files.length) setStaged((prev) => [...prev, ...files]);
     }
+
+    /**
+     * @brief Handles drag-and-drop file upload, appends dropped files to the staging area.
+     * @param {React.DragEvent<HTMLDivElement>} e - Div drag event.
+     * @returns {void}
+     */
     function onDrop(e: React.DragEvent<HTMLDivElement>) {
         e.preventDefault();
         const files = Array.from(e.dataTransfer.files || []);
         if (files.length) setStaged((prev) => [...prev, ...files]);
     }
 
+    /**
+     * @brief Uploads all staged files as new HERO images, ordering after the current images.
+     * Clears staging area after upload. Triggers a data reload.
+     * @returns {Promise<void>}
+     */
     async function uploadStaged() {
         if (staged.length === 0) return;
         setUploading(true);
@@ -277,6 +371,11 @@ function HeroCarouselManager() {
         }
     }
 
+    /**
+     * @brief Deletes a hero image from the carousel by its id, after user confirmation.
+     * @param {string} id - Media asset ID to delete.
+     * @returns {Promise<void>}
+     */
     async function del(id: string) {
         if (!confirm("Supprimer cette image du carrousel ?")) return;
         setSaving(id);
@@ -288,6 +387,11 @@ function HeroCarouselManager() {
         }
     }
 
+    /**
+     * @brief Toggles the published state of a hero image.
+     * @param {MediaAsset} it - Media asset to publish/unpublish.
+     * @returns {Promise<void>}
+     */
     async function togglePublish(it: MediaAsset) {
         setSaving(it.id);
         try {
@@ -303,6 +407,12 @@ function HeroCarouselManager() {
         }
     }
 
+    /**
+     * @brief Updates the alt text for a hero image.
+     * @param {MediaAsset} it - Media asset to update.
+     * @param {string} alt - New alt text value.
+     * @returns {Promise<void>}
+     */
     async function changeAlt(it: MediaAsset, alt: string) {
         setSaving(it.id);
         try {
@@ -318,6 +428,12 @@ function HeroCarouselManager() {
         }
     }
 
+    /**
+     * @brief Changes the display order (sortOrder) of a hero image.
+     * @param {MediaAsset} it - Media asset to update.
+     * @param {number} newOrder - Desired new order index.
+     * @returns {Promise<void>}
+     */
     async function changeOrder(it: MediaAsset, newOrder: number) {
         setSaving(it.id);
         try {
@@ -405,7 +521,27 @@ function HeroCarouselManager() {
 }
 
 
-/** ---------- GALLERY (multi-image, add/remove/reorder/toggle publish) ---------- */
+/**
+ * @brief Administrative Gallery Manager component.
+ *
+ * Allows administrators to:
+ *   - View current gallery images
+ *   - Upload new images (multi-file, drag-and-drop)
+ *   - Add images from the media library to the gallery
+ *   - Remove images from the gallery
+ *   - Reorder images in the gallery
+ *   - Toggle published/unpublished state for each gallery image
+ *
+ * State management:
+ *   - items: Current list of gallery MediaAsset items
+ *   - staged: Local staged images (as File objects) before they are uploaded
+ *   - uploading: Boolean, show if a multi-upload operation is ongoing
+ *   - savingId: Currently saving (uploading/modifying/removing) asset's id
+ *   - allMedia: All available MediaAssets not currently in the gallery
+ *   - showPicker: Whether to show the media library picker UI (for adding to gallery)
+ *
+ * @returns {JSX.Element} The gallery manager UI for admin dashboard.
+ */
 function GalleryManager() {
     const [items, setItems] = useState<MediaAsset[]>([]);
     const [staged, setStaged] = useState<File[]>([]);
@@ -416,6 +552,10 @@ function GalleryManager() {
     const [allMedia, setAllMedia] = useState<MediaAsset[]>([]);
     const [showPicker, setShowPicker] = useState(false);
 
+    /**
+     * @brief Fetches current gallery items from the backend, sorts them by sortOrder.
+     * @async
+     */
     async function load() {
         const res = await fetch("/api/admin/gallery", { credentials: "include" });
         const data: MediaAsset[] = await res.json();
@@ -423,6 +563,10 @@ function GalleryManager() {
     }
     useEffect(() => { load(); }, []);
 
+    /**
+     * @brief Fetches all media assets admin can see, filters out those already in the gallery.
+     * @async
+     */
     async function loadAllMedia() {
         // fetch everything admin can see; filter out already-in-gallery
         const res = await fetch("/api/admin/media", { credentials: "include" });
@@ -431,16 +575,34 @@ function GalleryManager() {
         setAllMedia(data.filter(m => !inGallery.has(m.id)));
     }
 
+    /**
+     * @brief Handles image file(s) pick event for uploading new gallery images.
+     * @param {React.ChangeEvent<HTMLInputElement>} e - Change event with picked files.
+     */
     function onFilePick(e: React.ChangeEvent<HTMLInputElement>) {
         const files = Array.from(e.target.files || []);
         if (files.length) setStaged(prev => [...prev, ...files]);
     }
+
+    /**
+     * @brief Handles drag-and-drop event for uploading new gallery images.
+     * @param {React.DragEvent<HTMLDivElement>} e - Drag event with dropped files.
+     */
     function onDrop(e: React.DragEvent<HTMLDivElement>) {
         e.preventDefault();
         const files = Array.from(e.dataTransfer.files || []);
         if (files.length) setStaged(prev => [...prev, ...files]);
     }
 
+    /**
+     * @brief Uploads all staged files as gallery items.
+     *
+     * Sequentially uploads files:
+     *   1. Uploads each file to create a MediaAsset
+     *   2. Adds it to gallery with sequential sortOrder and published=true
+     *
+     * @async
+     */
     async function uploadStaged() {
         if (!staged.length) return;
         setUploading(true);
@@ -468,6 +630,11 @@ function GalleryManager() {
         }
     }
 
+    /**
+     * @brief Adds an existing media asset (not already in gallery) to the gallery.
+     * @param {string} mediaAssetId - The MediaAsset ID to add to the gallery.
+     * @async
+     */
     async function addExisting(mediaAssetId: string) {
         const nextOrder = (items[items.length - 1]?.sortOrder ?? items.length - 1) + 1;
         await fetch("/api/admin/gallery", {
@@ -479,6 +646,11 @@ function GalleryManager() {
         await load();
     }
 
+    /**
+     * @brief Removes an image from the gallery (does not delete from media library).
+     * @param {string} mediaAssetId - The MediaAsset ID to remove from gallery.
+     * @async
+     */
     async function removeFromGallery(mediaAssetId: string) {
         if (!confirm("Retirer cette image de la galerie ?")) return;
         setSavingId(mediaAssetId);
@@ -493,6 +665,12 @@ function GalleryManager() {
         }
     }
 
+    /**
+     * @brief Toggles the published state of a gallery image.
+     * @param {string} mediaAssetId - The MediaAsset ID to update.
+     * @param {boolean} published - The previous published state; will be toggled.
+     * @async
+     */
     async function togglePublish(mediaAssetId: string, published: boolean) {
         setSavingId(mediaAssetId);
         try {
@@ -508,6 +686,12 @@ function GalleryManager() {
         }
     }
 
+    /**
+     * @brief Changes the sort order of a gallery image.
+     * @param {string} mediaAssetId - The MediaAsset ID to update.
+     * @param {number} sortOrder - The new sort order.
+     * @async
+     */
     async function changeOrder(mediaAssetId: string, sortOrder: number) {
         setSavingId(mediaAssetId);
         try {
@@ -629,28 +813,58 @@ function GalleryManager() {
 
 /** ---------- MENU ---------- */
 
+/**
+ * @brief Component for managing menu images (uploading, publishing, reordering, deleting) in the admin dashboard.
+ *
+ * Allows admin users to:
+ * - Upload multiple new menu images (defaults to unpublished)
+ * - Toggle publish state (with a max of 10 published)
+ * - Change display order (move up/down)
+ * - Delete menu images
+ *
+ * @component
+ */
 function MenuManager() {
     const [items, setItems] = useState<MediaAsset[]>([]);
     const [staged, setStaged] = useState<FileList | null>(null);
     const [working, setWorking] = useState(false);
 
+    /**
+     * @brief Loads all menu images from the backend, sorted by sortOrder.
+     * @async
+     * @return {Promise<void>}
+     */
     async function load() {
         const res = await fetch("/api/admin/media?type=MENU", { credentials: "include" });
         const data: MediaAsset[] = await res.json();
         setItems(data.sort((a, b) => a.sortOrder - b.sortOrder));
     }
+
     useEffect(() => { load(); }, []);
 
+    /**
+     * @brief The count of currently published menu images.
+     * @type {number}
+     */
     const publishedCount = useMemo(
         () => items.filter(i => i.published).length,
         [items]
     );
 
+    /**
+     * @brief Handler for file input changes - stages selected files for upload.
+     * @param {React.ChangeEvent<HTMLInputElement>} e
+     */
     function onPick(e: React.ChangeEvent<HTMLInputElement>) {
         setStaged(e.target.files);
     }
 
-    // (A) Upload (supports multi-file). New uploads default to unpublished.
+    /**
+     * @brief Uploads all staged menu images to the server. New uploads are unpublished by default.
+     *        Upload is sequential to maintain correct sortOrder.
+     * @async
+     * @returns {Promise<void>}
+     */
     async function uploadNewMenus() {
         if (!staged || staged.length === 0) return;
         setWorking(true);
@@ -679,7 +893,13 @@ function MenuManager() {
         }
     }
 
-    // (B) Toggle publish with a hard client cap of 3
+    /**
+     * @brief Toggles published state for a menu item.
+     *        Prevents publishing if max is reached.
+     * @param {MediaAsset} it Menu image asset
+     * @async
+     * @returns {Promise<void>}
+     */
     async function togglePublish(it: MediaAsset) {
         const next = !it.published;
         if (next && publishedCount >= 10) {
@@ -700,7 +920,14 @@ function MenuManager() {
         }
     }
 
-    // (C) Simple reordering helpers (down/up by 1 step)
+    /**
+     * @brief Moves a menu item up or down in the order.
+     *        Swaps sortOrder with adjacent item.
+     * @param {MediaAsset} it The menu item
+     * @param {number} delta +1 to move down, -1 to move up
+     * @async
+     * @returns {Promise<void>}
+     */
     async function bump(it: MediaAsset, delta: number) {
         const ordered = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
         const i = ordered.findIndex(x => x.id === it.id);
@@ -731,6 +958,12 @@ function MenuManager() {
         }
     }
 
+    /**
+     * @brief Deletes a menu image asset after user confirmation.
+     * @param {string} id
+     * @async
+     * @returns {Promise<void>}
+     */
     async function del(id: string) {
         if (!confirm("Supprimer cette image du menu ?")) return;
         setWorking(true);
@@ -832,21 +1065,36 @@ function MenuManager() {
 /** ---------- Announcements (full CRUD, EU pickers + preview) ---------- */
 
 
+/**
+ * @brief React component to manage announcements (CRUD interface with EU pickers & preview).
+ * 
+ * This component provides full create, read, update, and delete functionality for announcements,
+ * including support for images (media assets). Allows creation of new announcements, editing existing ones, 
+ * and previewing/assigning images. Uses per-row accordions for details and editing forms.
+ * 
+ * @component
+ */
 function AnnouncementsManager() {
     const [rows, setRows] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // new / edit form state
+    // --- New / Edit form state ---
     const [nDate, setNDate] = useState<string>("");
     const [nTitle, setNTitle] = useState("");
     const [nDesc, setNDesc] = useState("");
     const [nPub, setNPub] = useState(true);
-    const [nMedia, setNMedia] = useState<MediaAsset[]>([]); // ← NEW
+    const [nMedia, setNMedia] = useState<MediaAsset[]>([]); // Images for new announcement
 
     const [editing, setEditing] = useState<Announcement | null>(null);
     const [busyId, setBusyId] = useState<string | null>(null);
-    const [openId, setOpenId] = useState<string | "new" | null>(null); // ← accordion
+    const [openId, setOpenId] = useState<string | "new" | null>(null); // Accordion state
 
+    /**
+     * @brief Loads all announcements from the API and updates component state.
+     * 
+     * Fetches the list from `/api/admin/announcements`, and stores them in 'rows'.
+     * Sets loading state appropriately.
+     */
     async function load() {
         setLoading(true);
         try {
@@ -857,8 +1105,16 @@ function AnnouncementsManager() {
             setLoading(false);
         }
     }
+
+    // Initial data load on component mount
     useEffect(() => { load(); }, []);
 
+    /**
+     * @brief Sends a request to create a new announcement.
+     * 
+     * Requires 'nDate' and 'nTitle' to be set. 
+     * After successful creation, resets form state and reloads the list.
+     */
     async function create() {
         if (!nDate || !nTitle) return;
         setBusyId("new");
@@ -868,15 +1124,15 @@ function AnnouncementsManager() {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    date: asDateTime(nDate), // "YYYY-MM-DD" -> ISO
+                    date: asDateTime(nDate), // "YYYY-MM-DD" -> ISO string
                     title: nTitle,
                     desc: nDesc || null,
                     published: nPub,
-                    media: nMedia.map((m, i) => ({ id: m.id, sortOrder: i })), // ← include media
+                    media: nMedia.map((m, i) => ({ id: m.id, sortOrder: i })), // include images
                 }),
             });
             setNDate(""); setNTitle(""); setNDesc(""); setNPub(true);
-            setNMedia([]); // reset
+            setNMedia([]); // Reset media selection
             await load();
             setOpenId(null);
         } finally {
@@ -884,6 +1140,14 @@ function AnnouncementsManager() {
         }
     }
 
+    /**
+     * @brief Updates an existing announcement.
+     * 
+     * @param a The announcement object (with edits) to update.
+     * 
+     * Sends a PATCH request to update the specified announcement by id.
+     * After success, clears the editing state and reloads the list.
+     */
     async function update(a: Announcement) {
         setBusyId(a.id);
         try {
@@ -892,7 +1156,7 @@ function AnnouncementsManager() {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    date: asDateTime((a.date || "").slice(0, 10)), // ensure Y-M-D
+                    date: asDateTime((a.date || "").slice(0, 10)), // ensure Y-M-D ISO format
                     title: a.title,
                     desc: a.desc ?? null,
                     published: a.published,
@@ -910,6 +1174,11 @@ function AnnouncementsManager() {
         }
     }
 
+    /**
+     * @brief Deletes an announcement by id after confirmation.
+     * 
+     * @param id The id of the announcement to delete.
+     */
     async function remove(id: string) {
         if (!confirm("Supprimer cette annonce ?")) return;
         setBusyId(id);
@@ -1302,6 +1571,29 @@ function BusinessHoursManager() {
     );
 }
 
+/**
+ * @brief Administrative Closures Manager component.
+ *
+ * Allows administrators to:
+ *   - View the list of exceptional closures (single dates)
+ *   - Add a new closure (for a specified date and slot, with optional note)
+ *   - Delete existing closures
+ *
+ * State management:
+ *   - rows: Array of current Closure objects displayed in the table
+ *   - loading: Boolean indicating if closures are loading from the backend
+ *   - cDate: Date input for new closure (YYYY-MM-DD)
+ *   - cSlot: Slot input for new closure ("ALL", "LUNCH", or "DINNER")
+ *   - cNote: Optional note for new closure
+ *   - busyId: ID of the closure currently being saved/deleted, or "new" when adding
+ *
+ * API endpoints:
+ *   - GET /api/admin/closures         - List all closures
+ *   - POST /api/admin/closures        - Create new closure
+ *   - DELETE /api/admin/closures/:id  - Remove closure by id
+ *
+ * @returns {JSX.Element} The closures manager UI.
+ */
 function ClosuresManager() {
     const [rows, setRows] = useState<Closure[]>([]);
     const [loading, setLoading] = useState(true);
@@ -1311,6 +1603,10 @@ function ClosuresManager() {
     const [cNote, setCNote] = useState("");
     const [busyId, setBusyId] = useState<string | "new" | null>(null);
 
+    /**
+     * @brief Loads all closures from the backend and updates the UI state.
+     * @async
+     */
     async function load() {
         setLoading(true);
         try {
@@ -1323,6 +1619,11 @@ function ClosuresManager() {
     }
     useEffect(() => { load(); }, []);
 
+    /**
+     * @brief Handles creation of a new closure via API.
+     * Resets form on success, reloads list. Shows alert on error.
+     * @async
+     */
     async function addClosure() {
         if (!cDate) return;
         setBusyId("new");
@@ -1345,6 +1646,12 @@ function ClosuresManager() {
         }
     }
 
+    /**
+     * @brief Deletes a closure by id after user confirmation.
+     * Reloads list after success.
+     * @param {string} id - Closure id to delete
+     * @async
+     */
     async function del(id: string) {
         if (!confirm("Supprimer cette fermeture ?")) return;
         setBusyId(id);
@@ -1360,10 +1667,12 @@ function ClosuresManager() {
         <section>
             <h2 className="font-legacy text-2xl mb-3">Fermetures exceptionelles</h2>
 
+            {/* Add closure form */}
             <div className="rounded-xl border border-[#4C0C27]/20 bg-white/80 p-4 mb-4">
                 <div className="font-semibold mb-2">Ajouter une fermeture</div>
                 <div className="grid md:grid-cols-6 gap-2 items-center">
                     <div className="flex items-center gap-2">
+                        {/* Date input */}
                         <input
                             type="date"
                             lang={EU_LANG}
@@ -1376,20 +1685,24 @@ function ClosuresManager() {
                         </span>
                     </div>
 
+                    {/* Slot select */}
                     <select value={cSlot} onChange={(e) => setCSlot(e.target.value as Slot)} className="px-2 py-1 rounded border border-[#4C0C27]/30 bg-white">
                         <option value="ALL">Toute la journée</option>
                         <option value="LUNCH">Midi</option>
                         <option value="DINNER">Soir</option>
                     </select>
 
+                    {/* Note input */}
                     <input type="text" placeholder="Note (facultatif)" value={cNote} onChange={(e) => setCNote(e.target.value)} className="px-2 py-1 rounded border border-[#4C0C27]/30 bg-white md:col-span-3" />
 
+                    {/* Add button */}
                     <button onClick={addClosure} disabled={busyId === "new"} className="px-3 py-1.5 rounded bg-[#4C0C27] text-white">
                         {busyId === "new" ? "Enregistrement…" : "Ajouter"}
                     </button>
                 </div>
             </div>
 
+            {/* Table of closures */}
             <div className="rounded-xl border border-[#4C0C27]/20 bg-white/70 p-2">
                 {loading ? (
                     <div className="p-4 text-[#4C0C27]">Chargement…</div>
@@ -1426,22 +1739,74 @@ function ClosuresManager() {
     );
 }
 
+/**
+ * @brief React component for managing recurring closure rules.
+ * 
+ * This component provides a UI for creating, listing, and deleting recurring closure 
+ * rules (such as regular weekly day closures) for the admin dashboard.
+ * 
+ * The rules can specify weekday, day part (ALL/LUNCH/DINNER), optional note, optional
+ * start/end date ranges, and an optional recurrence interval in weeks.
+ * 
+ * @component
+ * @returns {JSX.Element}
+ *
+ * @doxygen
+ * @section STATE
+ * - rows: Array of current recurring closure rules loaded from the backend.
+ * - loading: Boolean indicating if rules are being (re)loaded.
+ * - rWeekday: Selected weekday number for new rule (0=Monday, 6=Sunday).
+ * - rSlot: Selected slot ("ALL", "LUNCH", "DINNER") for new rule.
+ * - rNote: Note value for new rule.
+ * - rStartsOn: Start date of recurrence (YYYY-MM-DD string) for new rule.
+ * - rEndsOn: End date for recurrence (YYYY-MM-DD string) for new rule.
+ * - rInterval: Recurrence interval in weeks for new rule.
+ * - busy: Busy flag -- the id or "new" if a request is in flight.
+ *
+ * @section FUNC
+ * - load: Fetch all recurring closure rules from API and update state.
+ * - addRule: Add a new recurring closure rule using the current form state.
+ * - delRule: Delete a rule by id after confirmation.
+ */
 function RecurringClosuresManager() {
+    /**
+     * @brief Array of recurring closure rule objects.
+     * @type {Array<{id: string, weekday: number, slot: "ALL"|"LUNCH"|"DINNER", note?: string|null, startsOn?: string|null, endsOn?: string|null, interval?: number}>}
+     */
     const [rows, setRows] = useState<Array<{
         id: string; weekday: number; slot: "ALL" | "LUNCH" | "DINNER";
         note?: string | null; startsOn?: string | null; endsOn?: string | null; interval?: number;
     }>>([]);
+    /**
+     * @brief Loading flag for fetch actions.
+     * @type {boolean}
+     */
     const [loading, setLoading] = useState(true);
 
-    // form
+    // --- Form state for new recurring rule ---
+    /** @brief Selected weekday number (0 = Monday). */
     const [rWeekday, setRWeekday] = useState<number>(0); // Mon
+    /** @brief Selected slot ("ALL", "LUNCH", "DINNER"). */
     const [rSlot, setRSlot] = useState<"ALL" | "LUNCH" | "DINNER">("ALL");
+    /** @brief Note (optional). */
     const [rNote, setRNote] = useState("");
+    /** @brief StartsOn ISO date string (yyyy-mm-dd, optional). */
     const [rStartsOn, setRStartsOn] = useState<string>(""); // yyyy-mm-dd
+    /** @brief EndsOn ISO date string (yyyy-mm-dd, optional). */
     const [rEndsOn, setREndsOn] = useState<string>("");     // yyyy-mm-dd
+    /** @brief Recurrence interval in weeks. */
     const [rInterval, setRInterval] = useState<number>(1);
+
+    /** @brief Busy state: either "new" (on create), or rule id (on delete), or null. */
     const [busy, setBusy] = useState<string | "new" | null>(null);
 
+    /**
+     * @brief Loads (fetches) all recurring closure rules from the backend API.
+     * Updates the `rows` state with results.
+     * @doxygen
+     * @async
+     * @returns {Promise<void>}
+     */
     async function load() {
         setLoading(true);
         try {
@@ -1450,8 +1815,17 @@ function RecurringClosuresManager() {
             setRows(data);
         } finally { setLoading(false); }
     }
+    // On mount, load list.
     useEffect(() => { load(); }, []);
 
+    /**
+     * @brief Adds a new recurring closure rule using form state fields.
+     * Sends a POST request to the backend and updates the list after.
+     * Displays an alert on failure.
+     * @doxygen
+     * @async
+     * @returns {Promise<void>}
+     */
     async function addRule() {
         setBusy("new");
         try {
@@ -1479,6 +1853,14 @@ function RecurringClosuresManager() {
         } finally { setBusy(null); }
     }
 
+    /**
+     * @brief Deletes a recurring closure rule by id after confirmation.
+     * Sends a DELETE request and reloads upon success.
+     * @param {string} id - The rule id to delete.
+     * @doxygen
+     * @async
+     * @returns {Promise<void>}
+     */
     async function delRule(id: string) {
         if (!confirm("Supprimer cette récurrence ?")) return;
         setBusy(id);
@@ -1488,6 +1870,7 @@ function RecurringClosuresManager() {
         } finally { setBusy(null); }
     }
 
+    /** @brief Array of weekday labels for display (Monday-first, French). */
     const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]; // Mon=0
 
     return (
@@ -1573,151 +1956,202 @@ function RecurringClosuresManager() {
 }
 
 
+/**
+ * @typedef Summary
+ * @brief Contains summary analytics data for the dashboard.
+ * @property {number} total - The total number of hits.
+ * @property {number} uniques - The number of unique sessions.
+ * @property {Array<{path: string, hits: number}>} topPages - Array of the most visited pages.
+ * @property {Array<{city: string | null, country: string | null, hits: number}>} topCities - Array of the most active cities/countries.
+ * @property {{from: string, to: string}} range - The analytics date range.
+ */
 type Summary = {
-    total: number;
-    uniques: number;
-    topPages: { path: string; hits: number }[];
-    topCities: { city: string | null; country: string | null; hits: number }[];
-    range: { from: string; to: string };
-  };
-  type SeriesPoint = { bucket: string; hits: number };
-  
-  function AnalyticsPanel() {
-    const [from, setFrom] = useState(dayjs().subtract(29, "day").format("YYYY-MM-DD"));
-    const [to, setTo] = useState(dayjs().format("YYYY-MM-DD"));
-    const [summary, setSummary] = useState<Summary | null>(null);
-    const [series, setSeries] = useState<SeriesPoint[]>([]);
-    const [loading, setLoading] = useState(false);
-  
-    useEffect(() => {
-      let cancelled = false;
-      setLoading(true);
-      const q = `from=${from}&to=${to}`;
-      Promise.all([
-        fetch(`/api/admin/analytics/summary?${q}`, { credentials: "include" }).then(r => r.json()),
-        fetch(`/api/admin/analytics/series?bucket=day&${q}`, { credentials: "include" }).then(r => r.json()),
-      ])
-        .then(([s, ts]) => { if (!cancelled) { setSummary(s); setSeries(ts); } })
-        .finally(() => { if (!cancelled) setLoading(false); });
-      return () => { cancelled = true; };
-    }, [from, to]);
-  
-    const seriesData = useMemo(
-      () => series.map(d => ({ date: dayjs(d.bucket).format("YYYY-MM-DD"), hits: d.hits })),
-      [series]
-    );
-  
-    return (
-      <section>
-        <h2 className="font-legacy text-2xl mb-3">Analytics</h2>
-  
-        {/* Range controls */}
-        <div className="mb-4 flex items-end gap-3">
-          <div>
-            <label className="block text-sm mb-1">Du</label>
-            <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-                   className="border p-2 rounded bg-white" />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Au</label>
-            <input type="date" value={to} onChange={e => setTo(e.target.value)}
-                   className="border p-2 rounded bg-white" />
-          </div>
-          {loading && <span className="text-sm text-[#4C0C27]">Chargement…</span>}
+  total: number;
+  uniques: number;
+  topPages: { path: string; hits: number }[];
+  topCities: { city: string | null; country: string | null; hits: number }[];
+  range: { from: string; to: string };
+};
+
+/**
+ * @typedef SeriesPoint
+ * @brief Represents a single point in the analytics time series (e.g., number of hits for a specific day).
+ * @property {string} bucket - The time bucket (usually a date string).
+ * @property {number} hits - Number of page hits in the bucket.
+ */
+type SeriesPoint = { bucket: string; hits: number };
+
+/**
+ * @brief Analytics panel for the admin dashboard.
+ * 
+ * This component displays website analytics including:
+ * - Top metrics (total hits, unique sessions, top page, top city)
+ * - A line chart of visits per day
+ * - A bar chart of most visited pages
+ * - A pie chart of top cities
+ *
+ * Allows the admin to select a date range for analysis.
+ *
+ * @component
+ */
+function AnalyticsPanel() {
+  const [from, setFrom] = useState(dayjs().subtract(29, "day").format("YYYY-MM-DD"));
+  const [to, setTo] = useState(dayjs().format("YYYY-MM-DD"));
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [series, setSeries] = useState<SeriesPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  /**
+   * @brief Loads analytics data (summary and time series) for the selected date range.
+   *        Called automatically when [from, to] changes.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const q = `from=${from}&to=${to}`;
+    Promise.all([
+      fetch(`/api/admin/analytics/summary?${q}`, { credentials: "include" }).then(r => r.json()),
+      fetch(`/api/admin/analytics/series?bucket=day&${q}`, { credentials: "include" }).then(r => r.json()),
+    ])
+      .then(([s, ts]) => { if (!cancelled) { setSummary(s); setSeries(ts); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [from, to]);
+
+  /**
+   * @brief Formats the time series data for use in the line chart.
+   */
+  const seriesData = useMemo(
+    () => series.map(d => ({ date: dayjs(d.bucket).format("YYYY-MM-DD"), hits: d.hits })),
+    [series]
+  );
+
+  return (
+    <section>
+      <h2 className="font-legacy text-2xl mb-3">Analytics</h2>
+
+      {/* Range controls */}
+      <div className="mb-4 flex items-end gap-3">
+        <div>
+          <label className="block text-sm mb-1">Du</label>
+          <input type="date" value={from} onChange={e => setFrom(e.target.value)}
+                 className="border p-2 rounded bg-white" />
         </div>
-  
-        {summary && (
-          <>
-            {/* Top stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <StatCard label="Total hits" value={summary.total} />
-              <StatCard label="Sessions uniques" value={summary.uniques} />
-              <StatCard label="Top page" value={summary.topPages[0]?.path ?? "—"} />
-              <StatCard label="Top ville" value={
-                summary.topCities[0] ? `${summary.topCities[0].city ?? "Unknown"} (${summary.topCities[0].country ?? "--"})` : "—"
-              } />
-            </div>
-  
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card title="Visites quotidiennes">
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={seriesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="hits" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card>
-  
-              <Card title="Pages les plus visitées">
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={summary.topPages}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="path" hide />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="hits" />
-                  </BarChart>
-                </ResponsiveContainer>
-                <ul className="mt-2 text-sm">
-                  {summary.topPages.map(p => (
-                    <li key={p.path} className="flex justify-between gap-2">
-                      <span className="truncate">{p.path}</span>
-                      <span>{p.hits}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            </div>
-  
-            <Card title="Top villes">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie dataKey="hits" data={summary.topCities}
-                         nameKey={(e: any) => `${e.city ?? "Unknown"} (${e.country ?? "--"})`} outerRadius={100}>
-                      {summary.topCities.map((_, idx) => <Cell key={idx} />)}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-  
-                <ul className="text-sm">
-                  {summary.topCities.map((c, i) => (
-                    <li key={i} className="flex justify-between gap-2">
-                      <span className="truncate">{`${c.city ?? "Unknown"} (${c.country ?? "--"})`}</span>
-                      <span>{c.hits}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        <div>
+          <label className="block text-sm mb-1">Au</label>
+          <input type="date" value={to} onChange={e => setTo(e.target.value)}
+                 className="border p-2 rounded bg-white" />
+        </div>
+        {loading && <span className="text-sm text-[#4C0C27]">Chargement…</span>}
+      </div>
+
+      {summary && (
+        <>
+          {/* Top stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <StatCard label="Total hits" value={summary.total} />
+            <StatCard label="Sessions uniques" value={summary.uniques} />
+            <StatCard label="Top page" value={summary.topPages[0]?.path ?? "—"} />
+            <StatCard label="Top ville" value={
+              summary.topCities[0] ? `${summary.topCities[0].city ?? "Unknown"} (${summary.topCities[0].country ?? "--"})` : "—"
+            } />
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card title="Visites quotidiennes">
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={seriesData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="hits" />
+                </LineChart>
+              </ResponsiveContainer>
             </Card>
-          </>
-        )}
-      </section>
-    );
-  }
-  
-  function StatCard({ label, value }: { label: string; value: string | number }) {
-    return (
-      <div className="p-4 rounded-xl border border-[#4C0C27]/20 bg-white/80 shadow-sm">
-        <div className="text-xs text-[#4C0C27]/80">{label}</div>
-        <div className="text-2xl font-semibold">{value}</div>
-      </div>
-    );
-  }
-  function Card({ title, children }: { title: string; children: React.ReactNode }) {
-    return (
-      <div className="p-4 rounded-xl border border-[#4C0C27]/20 bg-white/80 shadow-sm">
-        <div className="text-lg font-semibold mb-2">{title}</div>
-        {children}
-      </div>
-    );
-  }
+
+            <Card title="Pages les plus visitées">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={summary.topPages}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="path" hide />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="hits" />
+                </BarChart>
+              </ResponsiveContainer>
+              <ul className="mt-2 text-sm">
+                {summary.topPages.map(p => (
+                  <li key={p.path} className="flex justify-between gap-2">
+                    <span className="truncate">{p.path}</span>
+                    <span>{p.hits}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+
+          <Card title="Top villes">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie dataKey="hits" data={summary.topCities}
+                       nameKey={(e: any) => `${e.city ?? "Unknown"} (${e.country ?? "--"})`} outerRadius={100}>
+                    {summary.topCities.map((_, idx) => <Cell key={idx} />)}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <ul className="text-sm">
+                {summary.topCities.map((c, i) => (
+                  <li key={i} className="flex justify-between gap-2">
+                    <span className="truncate">{`${c.city ?? "Unknown"} (${c.country ?? "--"})`}</span>
+                    <span>{c.hits}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Card>
+        </>
+      )}
+    </section>
+  );
+}
+
+/**
+ * @brief Statistic card for analytics summary.
+ * @param {Object} props
+ * @param {string} props.label - The label of the stat.
+ * @param {string|number} props.value - The value of the stat.
+ * @returns {JSX.Element}
+ */
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="p-4 rounded-xl border border-[#4C0C27]/20 bg-white/80 shadow-sm">
+      <div className="text-xs text-[#4C0C27]/80">{label}</div>
+      <div className="text-2xl font-semibold">{value}</div>
+    </div>
+  );
+}
+
+/**
+ * @brief Card layout for analytics panels or charts.
+ * @param {Object} props
+ * @param {string} props.title - The title for the card.
+ * @param {React.ReactNode} props.children - Card content.
+ * @returns {JSX.Element}
+ */
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="p-4 rounded-xl border border-[#4C0C27]/20 bg-white/80 shadow-sm">
+      <div className="text-lg font-semibold mb-2">{title}</div>
+      {children}
+    </div>
+  );
+}
 
 /** ---------- helpers ---------- */
 

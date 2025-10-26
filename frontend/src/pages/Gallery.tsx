@@ -5,18 +5,38 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 /**
+ * @file Gallery.tsx
+ * @brief Renders the Lorange Rose "Gen-Z" gallery experience as a dynamic, responsive, hover-to-grow masonry grid.
+ * 
+ * @details
  * Gen‑Z gallery: vertical masonry with hover‑to‑grow that pushes neighbors,
  * subtle scroll reveals, and aspect‑aware sizing (portrait / landscape kept).
  *
- * Notes
+ * @note
  * - Uses CSS Grid masonry technique (grid-auto-rows) with JS-measured spans.
  * - On hover we bump both row and column span (where space allows) so the card
  *   gets taller + a bit wider, physically pushing neighbors away.
  * - Keeps original layout ratios using natural image dimensions.
  */
 
+/**
+ * DEBUG mode (enables more error logging in dev)
+ * @const {boolean}
+ */
 const DEBUG = import.meta.env.DEV;
 
+/**
+ * @typedef {Object} MediaAsset
+ * @property {string} id - Unique asset id.
+ * @property {"HERO"|"MENU"|string} type - Asset type identifier.
+ * @property {string} url - Source image URL.
+ * @property {string|null} alt - Alt text for accessibility.
+ * @property {number} sortOrder - Sort order for display.
+ * @property {boolean} published - Flag for published state.
+ * @property {number|null|undefined} [width] - Optional natural width.
+ * @property {number|null|undefined} [height] - Optional natural height.
+ * @property {number|undefined} [_linkSortOrder] - Optional link sort order.
+ */
 export type MediaAsset = {
     id: string;
     type: "HERO" | "MENU" | string;
@@ -29,9 +49,22 @@ export type MediaAsset = {
     _linkSortOrder?: number;
 };
 
+/**
+ * @constant {number} ROW - Base masonry row height, in px.
+ */
 const ROW = 8; // px — base masonry row height
+
+/**
+ * @constant {number} GAP - Gap between cards, in px.
+ */
 const GAP = 12; // px — gap between cards
 
+/**
+ * Gallery page component. Fetches media from API, renders a dynamic interactive masonry layout.
+ * 
+ * @component
+ * @returns {JSX.Element}
+ */
 export default function Gallery() {
     const [items, setItems] = useState<MediaAsset[]>([]);
     const [loading, setLoading] = useState(true);
@@ -151,6 +184,11 @@ export default function Gallery() {
 
 /* ---------------- Components ---------------- */
 
+/**
+ * @function ScrollProgress
+ * @description Renders a horizontal bar indicating scroll progress across the page. Uses window scroll position.
+ * @returns {JSX.Element}
+ */
 function ScrollProgress() {
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -169,6 +207,17 @@ function ScrollProgress() {
     return <div ref={ref} className="h-full origin-left bg-[#F7EBD9] transition-transform duration-100 will-change-transform" />;
 }
 
+/**
+ * @function MasonryCard
+ * @description
+ * Renders a single card in the masonry grid, sizing itself according to the image aspect and adding
+ * interactive hover effect (grow/push). Tracks its own column/row span dynamically for masonry packing.
+ * 
+ * @param {Object} props
+ * @param {MediaAsset} props.asset - Asset data for this card.
+ * @param {number} props.columnsHint - Number of columns in masonry layout (from parent).
+ * @returns {JSX.Element}
+ */
 function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: number }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
@@ -188,6 +237,12 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
   
     const EPS = 0.05; // avoids ceil thrash on DPR subpixels
   
+    /**
+     * Computes the optimal row/col span for the asset, considering natural image size and grid column/width.
+     * Used to maintain aspect ratio and to expand contract on hover, in a way that pushes neighbors.
+     * 
+     * @returns {Object|null} Spans, or null if cannot compute.
+     */
     const computeSpans = useCallback(() => {
       const wrap = wrapperRef.current;
       const img = imgRef.current;
@@ -226,7 +281,9 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
       return { baseRowSpan, baseColSpan, expandedRowSpan, expandedColSpan };
     }, [asset.width, asset.height, columnsHint]);
   
-    // Recalc spans (but freeze while hovered to avoid feedback loop)
+    /**
+     * Recalculate spans, but freeze while hovered to avoid feedback loop.
+     */
     const recalc = useCallback(() => {
       if (hovered) return; // freeze during hover
       const next = computeSpans();
@@ -262,12 +319,18 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
       return () => ro.disconnect();
     }, [recalc]);
   
+    /**
+     * Handler: On image load, mark as loaded and trigger repack.
+     */
     const onImgLoad = useCallback(() => {
       setLoaded(true);
       recalc();
     }, [recalc]);
   
-    // Force a single, clean repack on hover (prevents micro-thrash)
+    /**
+     * Force a single, clean repack on hover (prevents micro-thrash).
+     * @param {HTMLElement} container The grid's parent container element.
+     */
     function forcePack(container: HTMLElement) {
       const prev = container.style.gridAutoRows;
       container.style.gridAutoRows = `${ROW + 0.5}px`; // tiny, invisible nudge
@@ -275,6 +338,9 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
       container.style.gridAutoRows = prev;
     }
   
+    /**
+     * Handler: on pointer entering card.
+     */
     const onEnter = () => {
       // Compute once for current width, then hover
       const next = computeSpans();
@@ -285,8 +351,14 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
       if (parent) forcePack(parent);
     };
   
+    /**
+     * Handler: on pointer leaving card.
+     */
     const onLeave = () => setHovered(false);
   
+    /**
+     * Should use hover/expanded spans (true if device can hover and we're hovered)
+     */
     const useHoverSpans = canHover && hovered;
   
     return (
@@ -325,7 +397,11 @@ function MasonryCard({ asset, columnsHint }: { asset: MediaAsset; columnsHint: n
     );
   }
   
-
+/**
+ * @function useCanHover
+ * @description Determines if the current device supports hover (e.g. desktop mice) and returns a boolean. Internally reacts to media query for pointer: fine and hover: hover.
+ * @returns {boolean}
+ */
 function useCanHover() {
     const [canHover, setCanHover] = useState<boolean>(false);
     useEffect(() => {
@@ -339,6 +415,13 @@ function useCanHover() {
 }
 
 /* ---------------- Hooks & helpers ---------------- */
+
+/**
+ * @function useColumnsHint
+ * @description Determines ideal column count for the current window size and returns it, updating on window resize.
+ * Breakpoints: <640px=2, <960px=3, <1280px=4, else=5 columns.
+ * @returns {number}
+ */
 function useColumnsHint() {
     const [cols, setCols] = useState(1);
     useEffect(() => {
@@ -357,6 +440,11 @@ function useColumnsHint() {
 }
 
 /* ---------------- Page CSS ---------------- */
+
+/**
+ * @constant {string} css
+ * @description Embedded global CSS for the gallery experience (font, grid, masonry appearance, gradient bg, etc.)
+ */
 const css = `
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&display=swap');
 

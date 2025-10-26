@@ -1,3 +1,13 @@
+/**
+ * @file media.ts
+ * @brief Admin API routes for managing media assets (images, uploads).
+ * @details
+ * Provides endpoints for uploading, listing, updating, and deleting media assets.
+ * All endpoints require admin authentication (to be mounted under an admin-protected route).
+ * 
+ * NOTE: Uses Multer disk storage for local/dev; should be replaced for production/CDN use.
+ */
+
 import { Router } from "express";
 import { prisma } from "../../lib/prisma";
 import { z } from "zod";
@@ -8,7 +18,12 @@ import type { AuthedRequest } from "../../middleware/requireAdmin";
 
 const router = Router();
 
-// --- Multer disk storage (DEV/LOCAL) --- THIS SHOULD BE CHANGED WHEN MOVING TO SUPABASE
+/**
+ * @brief Multer disk storage configuration for local development.
+ * @details
+ * Stores uploads in ./uploads directory. Filenames are timestamped and sanitized.
+ * @note Replace this for production/CDN storage (e.g., Supabase, S3).
+ */
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, path.resolve(process.cwd(), "uploads")),
   filename: (_req, file, cb) => {
@@ -18,12 +33,37 @@ const storage = multer.diskStorage({
     cb(null, `${ts}_${base}${ext}`);
   },
 });
+
+/**
+ * @brief Multer middleware for single file uploads.
+ * @details
+ * File size limit: 10MB. Stores uploaded files using the above disk storage configuration.
+ */
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
 
-// --- Validation ---
-const MediaTypeEnum = z.enum(["HERO", "MENU", "ANNOUNCEMENT"]);
-const LowerMediaType = z.enum(["hero", "menu", "announcement"]).transform(s => s.toUpperCase() as "HERO" | "MENU" | "ANNOUNCEMENT");
+// --- Validation Schemas ---
 
+/**
+ * @brief Enum for supported media types.
+ * @details Accepts "HERO", "MENU", "ANNOUNCEMENT".
+ */
+const MediaTypeEnum = z.enum(["HERO", "MENU", "ANNOUNCEMENT"]);
+
+/**
+ * @brief Lowercase media type enum, coerces to uppercase.
+ */
+const LowerMediaType = z.enum(["hero", "menu", "announcement"])
+  .transform(s => s.toUpperCase() as "HERO" | "MENU" | "ANNOUNCEMENT");
+
+/**
+ * @brief Zod schema for creating a media asset.
+ * @details
+ * - type: Media type (required, case-insensitive)
+ * - alt: Alternative text (optional, max 200 chars)
+ * - sortOrder: Sort order for UI (default 0)
+ * - published: Published flag (default true)
+ * - width/height: Dimensions (optional, positive integers)
+ */
 const MediaCreate = z.object({
   type: z.union([MediaTypeEnum, LowerMediaType]),
   alt: z.string().max(200).optional().nullable(),
@@ -33,10 +73,22 @@ const MediaCreate = z.object({
   height: z.coerce.number().int().positive().optional(),
 });
 
+/**
+ * @brief Zod schema for updating a media asset.
+ * @details All fields optional; used for PATCH endpoints.
+ */
 const MediaUpdate = MediaCreate.partial();
 
 // --- Routes ---
-// Admin list: include everything, allow filter by type
+
+/**
+ * @brief GET /api/admin/media
+ * @route GET /
+ * @param req.query.type (optional) Filter by media type ("HERO", "MENU", "ANNOUNCEMENT")
+ * @returns {Array} All media assets, optionally filtered by type, sorted by type and sortOrder.
+ * @details
+ * Returns all media assets for admin, including unpublished ones.
+ */
 router.get("/", async (req, res) => {
   const type = req.query.type as string | undefined;
   const where = type ? { type: (type.toUpperCase() as any) } : {};
@@ -47,7 +99,15 @@ router.get("/", async (req, res) => {
   res.json(rows);
 });
 
-// Create with file (multipart/form-data)
+/**
+ * @brief POST /api/admin/media
+ * @route POST /
+ * @param file (multipart/form-data) The uploaded file (required)
+ * @param req.body Fields matching MediaCreate schema
+ * @returns {Object} The created media asset record
+ * @details
+ * Uploads a file and creates a media asset entry in the database. Stores the file in the local uploads directory.
+ */
 router.post("/", upload.single("file"), async (req: AuthedRequest, res) => {
   const parsed = MediaCreate.parse(req.body);
   const file = req.file;
@@ -72,7 +132,15 @@ router.post("/", upload.single("file"), async (req: AuthedRequest, res) => {
   res.status(201).json(created);
 });
 
-// Update metadata (no file)
+/**
+ * @brief PATCH /api/admin/media/:id
+ * @route PATCH /:id
+ * @param req.params.id {string} ID of the media asset to update
+ * @param req.body Fields matching MediaUpdate schema
+ * @returns {Object} The updated media asset record
+ * @details
+ * Updates metadata (type, alt, sortOrder, etc) for a media asset. Does not update the file itself.
+ */
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const data = MediaUpdate.parse(req.body);
@@ -83,7 +151,14 @@ router.patch("/:id", async (req, res) => {
   res.json(updated);
 });
 
-// Delete asset (and local file if any)
+/**
+ * @brief DELETE /api/admin/media/:id
+ * @route DELETE /:id
+ * @param req.params.id {string} ID of the media asset to delete
+ * @returns 204 No Content on success
+ * @details
+ * Deletes a media asset from the database and attempts best-effort cleanup of the associated local file.
+ */
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   const asset = await prisma.mediaAsset.delete({ where: { id } });

@@ -1,3 +1,11 @@
+/**
+ * @file Landing.tsx
+ * @brief The landing page for the L'Orange Rose website. Includes hero carousel, announcements, about, contact info, and footer.
+ *
+ * This file is the main entry point for rendering the landing (front) page and integrates API fetching, announcements, animated UI,
+ * responsive navigation, and general branding for the main site.
+ */
+
 import { useEffect, useMemo, useState } from "react";
 import { Phone, MapPin, Instagram, Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -9,7 +17,19 @@ import Logo from "@/assets/essentials/orangerose_logo-removebg-preview.png";
 
 const USE_CHUNKY = false;
 
-// types
+/**
+ * @typedef MediaAsset
+ * @brief Represents an individual media asset used in the carousel or for announcements.
+ * @property {string} id - The unique identifier for the asset.
+ * @property {string} type - The type/category of the media asset ("HERO" | "MENU" | string).
+ * @property {string} url - The URL of the media asset.
+ * @property {?string} alt - The alt text for accessibility, can be null.
+ * @property {number} sortOrder - The display order for the asset.
+ * @property {boolean} published - Whether the asset is visible/public.
+ * @property {?number} width - Optional width.
+ * @property {?number} height - Optional height.
+ * @property {?number} _linkSortOrder - Optional sort order from join table.
+ */
 type MediaAsset = {
   id: string;
   type: "HERO" | "MENU" | string; // keep open if you add more
@@ -22,6 +42,17 @@ type MediaAsset = {
   _linkSortOrder?: number; // from join table
 };
 
+/**
+ * @typedef Announcement
+ * @brief Represents news, events, or important info displayed in the announcements grid.
+ * @property {string} id - Unique identifier for the announcement.
+ * @property {string} date - ISO format string from API.
+ * @property {string} title - Title of the announcement.
+ * @property {?string} desc - Optional description/content.
+ * @property {boolean} published - If the announcement is publicly visible.
+ * @property {MediaAsset[]} mediaAssets - Associated images/media.
+ * @property {?Date} _date - Parsed date object (added client-side).
+ */
 type Announcement = {
   id: string;
   date: string; // ISO from API
@@ -36,9 +67,18 @@ type Announcement = {
   _date?: Date;
 };
 
-// Easing tuple (approx easeOut)
+/**
+ * Easing function for animations, approximating an "easeOut" cubic-bezier.
+ * @type {readonly [number, number, number, number]}
+ */
 const easeOutExpo = [0.16, 1, 0.3, 1] as const;
 
+/**
+ * @component SectionHeading
+ * @brief Decorative section title with horizontal lines.
+ * @param props.children - The title content to render.
+ * @returns {JSX.Element}
+ */
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative mx-[calc(50%-50vw)] px-6 py-12 sm:py-16 overflow-x-clip">
@@ -68,19 +108,69 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * @component Landing
+ * @brief Main landing and home page for the website.
+ *
+ * Includes:
+ * - Hero section with background image carousel
+ * - Responsive header and navigation
+ * - Announcements/news grid (from API)
+ * - About section
+ * - Contact/CTA section
+ * - Footer with credits and privacy info
+ *
+ * Data is fetched from REST endpoints on first mount, with animated hero and responsive navigation.
+ *
+ * @returns {JSX.Element}
+ */
 export default function Landing() {
   // --- NEW DATA STATE ---
+
+  /**
+   * @state slides
+   * @brief Slide images for the hero/carousel area.
+   * Each slide consists of a `src` URL and optional `alt` string.
+   */
   const [slides, setSlides] = useState<Array<{ src: string; alt: string }>>([]);
+  /**
+   * @state announcements
+   * @brief Array of announcement objects (from /api/announcements).
+   */
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  /**
+   * @state loadingSlides
+   * @brief Loading state for hero images.
+   */
   const [loadingSlides, setLoadingSlides] = useState(true);
+  /**
+   * @state loadingNews
+   * @brief Loading state for announcements/news.
+   */
   const [loadingNews, setLoadingNews] = useState(true);
+  /**
+   * @state idx
+   * @brief The current hero carousel index (0-based)
+   */
   const [idx, setIdx] = useState(0);
+  /**
+   * @state scrollY
+   * @brief Current scroll position (used for parallax effect).
+   */
   const [scrollY, setScrollY] = useState(0);
+  /**
+   * @state mobileOpen
+   * @brief Whether the mobile menu is currently visible.
+   */
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // i18n
+  // i18n - internationalization context
   const { t, localeTag } = useI18n();
 
+  /**
+   * @const news
+   * @brief Memoized list of announcements with parsed dates, sorted by date (soonest first).
+   */
   const news = useMemo(() => {
     return announcements
       .map((a) => {
@@ -91,6 +181,10 @@ export default function Landing() {
       .sort((a, b) => a._date.getTime() - b._date.getTime());
   }, [announcements]);
 
+  /**
+   * Fetch hero slides (HERO-type MediaAssets) on mount.
+   * Updates `slides` with sorted array from the API.
+   */
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -111,7 +205,10 @@ export default function Landing() {
     };
   }, []);
 
-  // Fetch announcements (published)
+  /**
+   * Fetches announcements (news/events) from the API on mount.
+   * Handles error fallback and populates announcements state.
+   */
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -139,14 +236,20 @@ export default function Landing() {
     };
   }, []);
 
-  // Carousel auto-advance only when we have slides
+  /**
+   * Carousel auto-advancer:
+   * Automatically cycles through hero slides at a 4.8s interval if slides exist.
+   */
   useEffect(() => {
     if (slides.length === 0) return;
     const id = setInterval(() => setIdx((i) => (i + 1) % slides.length), 4800);
     return () => clearInterval(id);
   }, [slides.length]);
 
-  // Track scroll (unchanged)
+  /**
+   * Tracks window scroll position and updates `scrollY`.
+   * Used for parallax effect on hero.
+   */
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
@@ -411,9 +514,9 @@ export default function Landing() {
     transition={{ duration: 0.6, ease: easeOutExpo }}
     className="mt-10 text-center mx-auto"
   >
-    <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed text-[#0B0B0B] font-light tracking-wide whitespace-pre-wrap">
-  {t("about.body")}
-</p>
+    <p className="text-xl md:text-2xl lg:text-3xl leading-relaxed text-[#0B0B0B] font-light tracking-wide whitespace-pre-wrap">
+      {t("about.body")}
+    </p>
     <div className="mt-12 w-32 h-px bg-gradient-to-r from-transparent via-[#C81D25] to-transparent mx-auto" />
   </motion.div>
 </section>

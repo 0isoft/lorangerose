@@ -1,21 +1,68 @@
+/**
+ * @file LanguageDropdown.tsx
+ * @brief Language dropdown/select component for changing UI language.
+ * @details
+ *   - Displays the current language, and allows switching ("en", "fr", "nl") via dropdown.
+ *   - Handles clicks outside dropdown and Esc to close menu.
+ *   - Keyboard accessible; options selectable with Enter or Space.
+ *   - Uses i18n context for current language and text.
+ */
+
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from ".././i18n";
 import { ChevronDown } from "lucide-react";
 
+/**
+ * @var LANGS
+ * @brief Array of available language codes for UI selection.
+ */
 const LANGS: Array<{ code: "en" | "fr" | "nl" }> = [
   { code: "en" }, { code: "fr" }, { code: "nl" }
 ];
 
+/**
+ * @component LanguageDropdown
+ * @brief Dropdown for selecting UI language.
+ * @returns {JSX.Element} Language selection dropdown.
+ *
+ * @details
+ * - Uses useI18n() for current lang and setter.
+ * - Menu closes on outside click or Escape key.
+ * - Selected language is highlighted and accessible by keyboard.
+ */
 export default function LanguageDropdown() {
+  /**
+   * @var lang Current language code
+   * @var setLang Function to set the language
+   * @var t Function to translate text keys
+   */
   const { lang, setLang, t } = useI18n();
+
+  /**
+   * @var open
+   * @brief State to control dropdown open/close.
+   */
   const [open, setOpen] = useState(false);
+
+  /**
+   * @var ref
+   * @brief Ref to the dropdown root for click outside detection.
+   */
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    /**
+     * @brief Handles document clicks to close menu when clicking outside.
+     * @param e MouseEvent
+     */
     function onDocClick(e: MouseEvent) {
       if (!ref.current) return;
       if (!ref.current.contains(e.target as Node)) setOpen(false);
     }
+    /**
+     * @brief Handles Escape key to close dropdown.
+     * @param e KeyboardEvent
+     */
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
@@ -40,7 +87,6 @@ export default function LanguageDropdown() {
         {t(`langNames.${lang}`)}
         <ChevronDown size={18} aria-hidden />
       </button>
-
       {open && (
         <ul
           role="listbox"
@@ -52,7 +98,14 @@ export default function LanguageDropdown() {
               role="option"
               aria-selected={lang === code}
               tabIndex={0}
+              /**
+               * @brief Handler for clicking a language option.
+               */
               onClick={() => { setLang(code); setOpen(false); }}
+              /**
+               * @brief Handler for selecting option via keyboard.
+               * @param e KeyboardEvent
+               */
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   setLang(code); setOpen(false);

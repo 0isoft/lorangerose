@@ -1,3 +1,8 @@
+/**
+ * @file Menu.tsx
+ * @brief The Menu page for the L'Orange Rose website. Displays menus as images and provides navigation.
+ */
+
 import { useEffect, useState } from "react";
 import Logo from "/src/assets/essentials/orangerose_logo-removebg-preview.png";
 import { Menu, X } from "lucide-react";
@@ -5,6 +10,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useI18n } from "../i18n";
 import LanguageDropdown from "../components/LanguageDropdown";
 
+/**
+ * @function SectionHeading
+ * @brief Displays a styled section heading with decorative lines and a legacy font.
+ * @param {object} props - React component props.
+ * @param {React.ReactNode} props.children - The content to be displayed in the heading.
+ * @returns {JSX.Element}
+ */
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative mx-[calc(50%-50vw)] px-6 py-12 sm:py-16 overflow-x-clip">
@@ -34,7 +46,18 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Matches your public /api/media response
+/**
+ * @typedef MediaAsset
+ * @brief Represents a media asset retrieved from the API.
+ * @property {string} id - Unique identifier for the asset.
+ * @property {"HERO"|"MENU"} type - Asset type.
+ * @property {string} url - URL of the asset. May be relative or absolute.
+ * @property {?string} alt - Alternative text for the image.
+ * @property {number} sortOrder - Render order for the asset.
+ * @property {boolean} published - Indicates if the asset is published.
+ * @property {?number} width - Optional image width.
+ * @property {?number} height - Optional image height.
+ */
 type MediaAsset = {
   id: string;
   type: "HERO" | "MENU";
@@ -46,12 +69,23 @@ type MediaAsset = {
   height?: number | null;
 };
 
-
+/**
+ * @function MenuPage
+ * @brief Top-level React component for the Menu page. Handles image fetching, loading state, header, navigation, and page styling.
+ * @returns {JSX.Element}
+ */
 export default function MenuPage() {
+  /** Images fetched from the menu media endpoint */
   const [images, setImages] = useState<MediaAsset[]>([]);
+  /** Loading state for image fetch */
   const [loading, setLoading] = useState(true);
+  /** Translation function from i18n */
   const { t } = useI18n();
 
+  /**
+   * @brief Fetch menu images from backend API on mount.
+   * Limits to 10 images, sorted by sortOrder, suppresses error UI in case of fetch failure.
+   */
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -69,8 +103,12 @@ export default function MenuPage() {
     return () => { alive = false; };
   }, []);
 
+  /** Whether the mobile navbar drawer is open */
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  /**
+   * @brief Prevent body scroll when mobile menu is open.
+   */
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };

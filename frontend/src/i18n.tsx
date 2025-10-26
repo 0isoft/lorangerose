@@ -15,15 +15,15 @@ const MESSAGES: Record<Lang, Messages> = {
         hero: { tagline: "Asian Food", explore: "Explore Menu" },
         about: { title: "About Us", body:`L'Orange Rose is delighted to reopen its doors with a brand new concept!
 
-        After 18 years of French cuisine, we felt the desire to evolve our establishment by bringing it a new breath of life, new colors and above all, new flavors.
+After 18 years of French cuisine, we felt the desire to evolve our establishment by bringing it a new breath of life, new colors and above all, new flavors.
 
-        Behind this metamorphosis lie years of practice, discoveries and inspiration drawn from the heart of a passion for Asian culture, its martial arts and its iconic cuisines.
+Behind this metamorphosis lie years of practice, discoveries and inspiration drawn from the heart of a passion for Asian culture, its martial arts and its iconic cuisines.
 
-        From Japan to Korea to Thailand, rediscover our establishment and its décor where tradition, street food and Asian pop culture meet.
+From Japan to Korea to Thailand, rediscover our establishment and its décor where tradition, street food and Asian pop culture meet.
 
-        With us, everything is homemade, with care and authenticity. The products are fresh and the dishes colorful, so that each bite invites travel and sharing.
+With us, everything is homemade, with care and authenticity. The products are fresh and the dishes colorful, so that each bite invites travel and sharing.
 
-        So, let yourself be tempted by a carefully rolled gimbap, a steaming ramen, some steamed dumplings… and leave with only one desire: to come back and see us.` },
+So, let yourself be tempted by a carefully rolled gimbap, a steaming ramen, some steamed dumplings… and leave with only one desire: to come back and see us.` },
         info: {
             visit: "Visit Us",
             call: "Call Us",
@@ -78,15 +78,15 @@ const MESSAGES: Record<Lang, Messages> = {
         hero: { tagline: "Asian food", explore: "Voir la carte" },
         about: { title: "À propos de nous", body: `L'Orange Rose a le plaisir de vous rouvrir ses portes avec un tout nouveau concept !
 
-        Après 18 ans de cuisine française, nous avons eu envie de faire évoluer notre établissement en lui apportant un nouveau souffle, de nouvelles couleurs et surtout, de nouvelles saveurs
+Après 18 ans de cuisine française, nous avons eu envie de faire évoluer notre établissement en lui apportant un nouveau souffle, de nouvelles couleurs et surtout, de nouvelles saveurs
         
-        Derrière cette métamorphose se cache des années de pratique, de découvertes et d'inspiration puisées au cœur d'une passion pour la culture asiatique, ses arts martiaux et ses cuisines emblématiques.
+Derrière cette métamorphose se cache des années de pratique, de découvertes et d'inspiration puisées au cœur d'une passion pour la culture asiatique, ses arts martiaux et ses cuisines emblématiques.
         
-        Du Japon à la Corée, en passant par la Thaïlande, redécouvrez notre établissement et ses décors où se rencontrent tradition, street food et pop culture asiatique.
+Du Japon à la Corée, en passant par la Thaïlande, redécouvrez notre établissement et ses décors où se rencontrent tradition, street food et pop culture asiatique.
         
-        Chez nous, tout est fait maison, avec soin et authenticité. Les produits sont frais et les plats colorés, pour que chaque bouchée invite au voyage et au partage.
+Chez nous, tout est fait maison, avec soin et authenticité. Les produits sont frais et les plats colorés, pour que chaque bouchée invite au voyage et au partage.
         
-        Alors, laissez-vous tenter par un gimbab soigneusement roulé, un ramen fumant, quelques raviolis vapeur… et repartez avec une seule envie : revenir nous voir.` 
+Alors, laissez-vous tenter par un gimbab soigneusement roulé, un ramen fumant, quelques raviolis vapeur… et repartez avec une seule envie : revenir nous voir.` 
          },
         info: {
             visit: "Venez nous voir",
@@ -142,15 +142,15 @@ const MESSAGES: Record<Lang, Messages> = {
         hero: { tagline: "Asian food", explore: "Ontdek het menukaart" },
         about: { title: "Over ons", body: `L'Orange Rose heeft het genoegen u haar deuren te heropenen met een gloednieuw concept!
 
-        Na 18 jaar Franse keuken hadden we zin om onze zaak te laten evolueren door er een nieuwe adem, nieuwe kleuren en vooral nieuwe smaken aan te brengen.
+Na 18 jaar Franse keuken hadden we zin om onze zaak te laten evolueren door er een nieuwe adem, nieuwe kleuren en vooral nieuwe smaken aan te brengen.
 
-        Achter deze metamorfose schuilen jaren van praktijk, ontdekkingen en inspiratie geput uit het hart van een passie voor de Aziatische cultuur, haar vechtkunsten en haar emblematische keukens.
+Achter deze metamorfose schuilen jaren van praktijk, ontdekkingen en inspiratie geput uit het hart van een passie voor de Aziatische cultuur, haar vechtkunsten en haar emblematische keukens.
 
-        Van Japan tot Korea, via Thailand, herontdek onze zaak en haar decoratie waar traditie, streetfood en Aziatische popcultuur elkaar ontmoeten.
+Van Japan tot Korea, via Thailand, herontdek onze zaak en haar decoratie waar traditie, streetfood en Aziatische popcultuur elkaar ontmoeten.
 
-        Bij ons is alles huisgemaakt, met zorg en authenticiteit. De producten zijn vers en de gerechten kleurrijk, zodat elke hap uitnodigt tot reizen en delen.
+Bij ons is alles huisgemaakt, met zorg en authenticiteit. De producten zijn vers en de gerechten kleurrijk, zodat elke hap uitnodigt tot reizen en delen.
 
-        Dus, laat u verleiden door een zorgvuldig gerolde gimbap, een stomende ramen, enkele gestoomde ravioli… en vertrek met slechts één verlangen: terug bij ons te komen.` },
+Dus, laat u verleiden door een zorgvuldig gerolde gimbap, een stomende ramen, enkele gestoomde ravioli… en vertrek met slechts één verlangen: terug bij ons te komen.` },
         info: {
             visit: "Bezoek ons",
             call: "Bel ons",
