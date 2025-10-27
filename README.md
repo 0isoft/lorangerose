@@ -26,7 +26,7 @@ Includes content management (CRUD) and multilingual support.
 
 ### Admin Portal
 - Role-based login (JWT)
-- Menu item CRUD (create/edit/delete)
+- Menu item CRUD
 - Gallery and announcement management
 - Edit opening hours and contact details
 - Real-time content preview before publishing
