@@ -178,5 +178,5 @@ B3 --> C
 
 
 ### Interactive documentation
-Interactive documentation available via Swagger UI  
+Interactive documentation available via Swagger UI, for authenticated users only
 **[`/api-docs`](https://lorangerose.be/api-docs)**
