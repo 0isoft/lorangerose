@@ -39,17 +39,17 @@ subgraph Client
   A[React + Vite Frontend]
 end
 
-subgraph Server["Backend: Node.js + Express"]
-  B1[Express Router Layer<br/>(Admin + Public APIs)]
-  B2[Middleware<br/>(Auth, Rate Limiting, Validation)]
-  B3[Prisma ORM<br/>(Database Access Layer)]
+subgraph Server["Backend Node.js Express"]
+  B1["Express Router Layer<br/>Admin and Public APIs"]
+  B2["Middleware<br/>Auth, Rate Limiting, Validation"]
+  B3["Prisma ORM<br/>Database Access Layer"]
 end
 
 subgraph Database
-  C[(PostgreSQL)]
+  C[("PostgreSQL")]
 end
 
-A -->|RESTful HTTP / JSON| B1
+A -->|"RESTful HTTP / JSON"| B1
 B1 --> B2
 B2 --> B3
 B3 --> C
