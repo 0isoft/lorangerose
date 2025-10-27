@@ -40,6 +40,12 @@ import { trackHit } from "./analytics";
 import rateLimit from "express-rate-limit";
 import adminAnalytics from "./routes/admin/analytics";
 import prisma from "./lib/prisma"
+// @ts-ignore
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import { Express } from "express";
+
+
 
 /**
  * @brief Express rate limiter for analytics tracking.
@@ -121,6 +127,40 @@ app.post("/api/track", trackLimiter, trackHit);
 app.use("/api/admin/analytics", requireAdmin, adminAnalytics);
 
 /**
+ * @brief Swagger OpenAPI Documentation
+ * @details
+ *   - Serves interactive Swagger UI at /api-docs for the API documentation
+ *   - Note: To ensure the docs work in dev (with TypeScript), point "apis" to the TS source files!
+ *   - JSDoc comments must be present in the .ts files, or use swagger-autogen for more advanced setups.
+ *   - If docs are blank, try: 
+ *       1. Change './routes/*.js' => './routes/*.ts'
+ *       2. Ensure valid JSDoc @swagger blocks in your route files.
+ */
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'L`Oragne Rose API',
+      version: '1.0.0',
+      description: 'CRUD API for restaurant management',
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+        description: "Local dev server"
+      }
+    ]
+  },
+  apis: [path.join(__dirname, 'routes', '**', '*.ts')],
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+
+// Simply use app.use directly - no need for a separate router
+app.use("/api-docs",requireAdmin, swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+/**
  * @brief Starts the HTTP server and listens for incoming requests.
  * @details
  *   - Uses PORT environment variable or defaults to 3000.
@@ -129,6 +169,7 @@ app.use("/api/admin/analytics", requireAdmin, adminAnalytics);
 const PORT = process.env.PORT || 3000;
 app.listen(Number(PORT), "0.0.0.0", () => {
   console.log(`API listening on http://0.0.0.0:${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
 
 /**

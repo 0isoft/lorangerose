@@ -4,46 +4,58 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const router = Router();
-/** @var {string} JWT_SECRET - Secret key for JWT token signing, defaults to dev-secret-change-me */
+
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication and user session management
+ */
+
+/** @var {string} JWT_SECRET - Secret key for JWT token signing */
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
-/** @var {boolean} isProd - Flag indicating if running in production environment */
+/** @var {boolean} isProd - Flag indicating production mode */
 const isProd = process.env.NODE_ENV === "production";
 
 /**
- * @brief Authenticate user with email and password
- * @route POST /api/auth/login
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body containing user credentials
- * @param {string} req.body.email - User's email address
- * @param {string} req.body.password - User's plain text password
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with authentication status
- * @returns {boolean} res.ok - True if authentication successful
- * @returns {string} res.error - Error message if authentication fails
- * @throws {400} Bad Request - When email or password is missing
- * @throws {401} Unauthorized - When credentials are invalid
- * 
- * @description
- * Validates user credentials by comparing the provided password with the 
- * hashed password stored in the database. On successful authentication,
- * generates a JWT token and sets it as an HTTP-only cookie.
- * 
- * @example
- * // Request body
- * {
- *   "email": "user@example.com",
- *   "password": "userpassword"
- * }
- * 
- * // Success response
- * {
- *   "ok": true
- * }
- * 
- * // Error response
- * {
- *   "error": "Invalid credentials"
- * }
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Log in a user
+ *     description: Authenticates user credentials and issues a JWT token as an HTTP-only cookie.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: Successfully authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Missing credentials
+ *       401:
+ *         description: Invalid credentials
+ *     examples:
+ *       application/json:
+ *         request:
+ *           {
+ *             "email": "user@example.com",
+ *             "password": "mypassword"
+ *           }
+ *         success:
+ *           {
+ *             "ok": true
+ *           }
+ *         error:
+ *           {
+ *             "error": "Invalid credentials"
+ *           }
  */
 router.post("/login", async (req, res) => {
   const { email, password } = (req.body ?? {}) as { email?: string; password?: string };
@@ -57,32 +69,28 @@ router.post("/login", async (req, res) => {
 
   const token = jwt.sign({ uid: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
   res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: isProd,
-        path: "/",
-      });
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+    path: "/",
+  });
   res.json({ ok: true });
 });
 
 /**
- * @brief Logout user by clearing authentication cookie
- * @route POST /api/auth/logout
- * @param {Object} _req - Express request object (unused)
- * @param {Object} res - Express response object
- * @returns {Object} JSON response confirming logout
- * @returns {boolean} res.ok - Always true for successful logout
- * 
- * @description
- * Clears the authentication token cookie from the client's browser,
- * effectively logging out the user. This is a simple operation that
- * doesn't require server-side token invalidation.
- * 
- * @example
- * // Success response
- * {
- *   "ok": true
- * }
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Log out current user
+ *     description: Clears the authentication cookie, effectively logging out the user.
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Successfully logged out
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LogoutResponse'
  */
 router.post("/logout", (_req, res) => {
   res.clearCookie("token");
@@ -90,42 +98,21 @@ router.post("/logout", (_req, res) => {
 });
 
 /**
- * @brief Get current authenticated user information
- * @route GET /api/auth/me
- * @param {Object} req - Express request object
- * @param {Object} req.cookies - Request cookies object
- * @param {string} req.cookies.token - JWT authentication token
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with user information or error
- * @returns {boolean} res.ok - True if user is authenticated
- * @returns {Object} res.user - User object if authenticated
- * @returns {string} res.user.id - User's unique identifier
- * @returns {string} res.user.email - User's email address
- * @returns {string} res.user.role - User's role (admin/user)
- * @returns {Date} res.user.createdAt - User account creation date
- * @throws {401} Unauthorized - When token is missing or invalid
- * 
- * @description
- * Validates the JWT token from cookies and returns the current user's
- * information if the token is valid. This endpoint is used to check
- * authentication status and get user details on the frontend.
- * 
- * @example
- * // Success response
- * {
- *   "ok": true,
- *   "user": {
- *     "id": "user123",
- *     "email": "user@example.com",
- *     "role": "admin",
- *     "createdAt": "2023-01-01T00:00:00.000Z"
- *   }
- * }
- * 
- * // Error response
- * {
- *   "ok": false
- * }
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current authenticated user
+ *     description: Returns information about the currently authenticated user based on the JWT cookie.
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: User authenticated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MeResponse'
+ *       401:
+ *         description: Invalid or missing token
  */
 router.get("/me", async (req, res) => {
   const token = req.cookies?.token;
@@ -145,3 +132,61 @@ router.get("/me", async (req, res) => {
 });
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     LoginRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *         - password
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: user@example.com
+ *         password:
+ *           type: string
+ *           format: password
+ *           example: mypassword
+ *     LoginResponse:
+ *       type: object
+ *       properties:
+ *         ok:
+ *           type: boolean
+ *           example: true
+ *         error:
+ *           type: string
+ *           example: Invalid credentials
+ *     LogoutResponse:
+ *       type: object
+ *       properties:
+ *         ok:
+ *           type: boolean
+ *           example: true
+ *     MeResponse:
+ *       type: object
+ *       properties:
+ *         ok:
+ *           type: boolean
+ *           example: true
+ *         user:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *               example: "user123"
+ *             email:
+ *               type: string
+ *               example: "user@example.com"
+ *             role:
+ *               type: string
+ *               example: "admin"
+ *             createdAt:
+ *               type: string
+ *               format: date-time
+ *               example: "2025-01-01T00:00:00.000Z"
+ */
+

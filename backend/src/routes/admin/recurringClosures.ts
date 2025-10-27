@@ -6,7 +6,6 @@
  * All endpoints require admin authentication.
  */
 
-export {}
 import { Router } from "express";
 import { prisma } from "../../lib/prisma";
 import { z } from "zod";
@@ -14,64 +13,84 @@ import { z } from "zod";
 const router = Router();
 
 /**
+ * @swagger
+ * tags:
+ *   name: Admin Recurring Closures
+ *   description: Endpoints for managing recurring weekly closures (admin only)
+ */
+
+/**
  * @brief Zod enum for allowed closure slots.
  * @details Restricts values to "ALL", "LUNCH", or "DINNER" (case-insensitive supported).
  */
 const SlotEnum = z.enum(["ALL", "LUNCH", "DINNER"]);
 
-/**
- * @brief Zod schema for allowed weekdays.
- * @details Restricts value to integer in range 0 (Sunday) to 6 (Saturday).
- */
 const Weekday = z.number().int().min(0).max(6);
 
-/**
- * @brief Zod schema for creating a recurring closure.
- * @details
- * - `weekday`: Day of week (0=Sun, ..., 6=Sat)
- * - `slot`: Closure slot ("ALL", "LUNCH", "DINNER"), case insensitive
- * - `note`: Optional note (max 500 chars)
- * - `startsOn`: Optional date the closure schedule begins (inclusive)
- * - `endsOn`: Optional date the closure schedule ends (inclusive)
- * - `interval`: Interval in weeks (default: 1)
- */
 const RecurringCreate = z.object({
-  weekday: Weekday, /**< Day of week for this recurring closure (0=Sun, ..., 6=Sat) */
+  weekday: Weekday,
   slot: z.union([
-    SlotEnum, 
-    z.enum(["all", "lunch", "dinner"]).transform(s => s.toUpperCase() as any)
-  ]), /**< Recurring closure slot ("ALL", "LUNCH", "DINNER"), case-insensitive */
-  note: z.string().max(500).optional().nullable(), /**< Optional closure note (max 500 chars) */
-  startsOn: z.coerce.date().optional().nullable(), /**< Optional first date to apply closure */
-  endsOn: z.coerce.date().optional().nullable(),   /**< Optional last date to apply closure */
-  interval: z.coerce.number().int().min(1).optional().default(1), /**< Weeks between closures (default: 1) */
+    SlotEnum,
+    z.enum(["all", "lunch", "dinner"]).transform(s => s.toUpperCase() as any),
+  ]),
+  note: z.string().max(500).optional().nullable(),
+  startsOn: z.coerce.date().optional().nullable(),
+  endsOn: z.coerce.date().optional().nullable(),
+  interval: z.coerce.number().int().min(1).optional().default(1),
 });
 
-/**
- * @brief Zod schema for updating a recurring closure.
- * @details All fields optional for PATCH requests.
- */
 const RecurringUpdate = RecurringCreate.partial();
 
 /**
- * @brief GET /api/admin/recurring-closures
- * @route GET /
- * @returns {Array} List of all recurring closures, ordered by weekday and slot ascending.
- * @details
- * Returns all recurring closure records for admin view.
+ * @swagger
+ * /api/admin/recurring-closures:
+ *   get:
+ *     summary: Get all recurring closures
+ *     description: Returns all recurring closure records for admin view.
+ *     tags: [Admin Recurring Closures]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of recurring closures
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RecurringClosure'
  */
 router.get("/", async (_req, res) => {
-  const rows = await prisma.recurringClosure.findMany({ orderBy: [{ weekday: "asc" }, { slot: "asc" }] });
+  const rows = await prisma.recurringClosure.findMany({
+    orderBy: [{ weekday: "asc" }, { slot: "asc" }],
+  });
   res.json(rows);
 });
 
 /**
- * @brief POST /api/admin/recurring-closures
- * @route POST /
- * @param req.body RecurringCreate
- * @returns {Object} The created recurring closure object
- * @details
- * Creates a new recurring closure. Does not prevent overlapping intervals or duplicate slots.
+ * @swagger
+ * /api/admin/recurring-closures:
+ *   post:
+ *     summary: Create a new recurring closure
+ *     description: Creates a new recurring closure. Does not prevent overlapping intervals or duplicate slots.
+ *     tags: [Admin Recurring Closures]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecurringClosureCreate'
+ *     responses:
+ *       201:
+ *         description: Created recurring closure
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RecurringClosure'
+ *       400:
+ *         description: Invalid request payload
  */
 router.post("/", async (req, res) => {
   const data = RecurringCreate.parse(req.body);
@@ -82,13 +101,36 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * @brief PATCH /api/admin/recurring-closures/:id
- * @route PATCH /:id
- * @param req.params.id {string} Closure ID to update
- * @param req.body RecurringUpdate
- * @returns {Object} The updated recurring closure object
- * @details
- * Updates an existing recurring closure by ID. Only fields present are updated.
+ * @swagger
+ * /api/admin/recurring-closures/{id}:
+ *   patch:
+ *     summary: Update a recurring closure
+ *     description: Updates an existing recurring closure by ID. Only fields present are updated.
+ *     tags: [Admin Recurring Closures]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Recurring closure ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecurringClosureUpdate'
+ *     responses:
+ *       200:
+ *         description: Updated recurring closure
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RecurringClosure'
+ *       404:
+ *         description: Closure not found
  */
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
@@ -101,12 +143,26 @@ router.patch("/:id", async (req, res) => {
 });
 
 /**
- * @brief DELETE /api/admin/recurring-closures/:id
- * @route DELETE /:id
- * @param req.params.id {string} Closure ID to delete
- * @returns 204 No Content on success
- * @details
- * Deletes a recurring closure by its ID.
+ * @swagger
+ * /api/admin/recurring-closures/{id}:
+ *   delete:
+ *     summary: Delete a recurring closure
+ *     description: Deletes a recurring closure by its ID.
+ *     tags: [Admin Recurring Closures]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Recurring closure ID
+ *     responses:
+ *       204:
+ *         description: Successfully deleted (no content)
+ *       404:
+ *         description: Closure not found
  */
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
@@ -115,3 +171,82 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RecurringClosure:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         weekday:
+ *           type: integer
+ *           minimum: 0
+ *           maximum: 6
+ *         slot:
+ *           type: string
+ *           enum: [ALL, LUNCH, DINNER]
+ *         note:
+ *           type: string
+ *           nullable: true
+ *         startsOn:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         endsOn:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         interval:
+ *           type: integer
+ *           minimum: 1
+ *     RecurringClosureCreate:
+ *       type: object
+ *       required: [weekday, slot]
+ *       properties:
+ *         weekday:
+ *           type: integer
+ *           minimum: 0
+ *           maximum: 6
+ *         slot:
+ *           type: string
+ *           enum: [ALL, LUNCH, DINNER]
+ *         note:
+ *           type: string
+ *           nullable: true
+ *         startsOn:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         endsOn:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         interval:
+ *           type: integer
+ *           minimum: 1
+ *     RecurringClosureUpdate:
+ *       type: object
+ *       properties:
+ *         weekday:
+ *           type: integer
+ *         slot:
+ *           type: string
+ *           enum: [ALL, LUNCH, DINNER]
+ *         note:
+ *           type: string
+ *           nullable: true
+ *         startsOn:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         endsOn:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *         interval:
+ *           type: integer
+ */
+

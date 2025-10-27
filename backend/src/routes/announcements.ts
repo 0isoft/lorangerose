@@ -5,6 +5,13 @@ import { z } from "zod";
 const router = Router();
 
 /**
+ * @swagger
+ * tags:
+ *   name: Announcements
+ *   description: Public endpoints for viewing and managing restaurant announcements
+ */
+
+/**
  * @brief Schema for media link validation
  * @details Defines the structure for linking media assets to announcements
  */
@@ -13,29 +20,16 @@ const MediaLink = z.object({
   sortOrder: z.number().int().min(0).optional().default(0),
 });
 
-/**
- * @brief Schema for creating new announcements
- * @details Validates input data when creating announcements with optional media attachments
- */
 const AnnouncementCreate = z.object({
   date: z.coerce.date(),
   title: z.string().min(1).max(160),
   desc: z.string().max(1000).optional().nullable(),
   published: z.coerce.boolean().optional().default(true),
-
   media: z.array(MediaLink).optional().default([]),
 });
 
-/**
- * @brief Schema for updating existing announcements
- * @details Partial schema allowing selective updates to announcement fields
- */
 const AnnouncementUpdate = AnnouncementCreate.partial();
 
-/**
- * @brief Include configuration for media relations
- * @details Defines how to include and order media assets when fetching announcements
- */
 const includeWithMedia = {
   media: {
     include: { asset: true },
@@ -44,10 +38,21 @@ const includeWithMedia = {
 };
 
 /**
- * @brief GET /announcements - Retrieve all announcements
- * @details Fetches all announcements ordered by date (newest first) with associated media assets
- * @returns {Promise<Object[]>} Array of announcements with flattened media assets
- * @note Media assets are flattened and include sort order for frontend consumption
+ * @swagger
+ * /api/announcements:
+ *   get:
+ *     summary: Get all announcements
+ *     description: Fetches all announcements ordered by date (newest first) with associated media assets.
+ *     tags: [Announcements]
+ *     responses:
+ *       200:
+ *         description: List of announcements
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Announcement'
  */
 router.get("/", async (_req, res) => {
   const rows = await prisma.announcement.findMany({
@@ -63,12 +68,27 @@ router.get("/", async (_req, res) => {
 });
 
 /**
- * @brief POST /announcements - Create a new announcement
- * @details Creates a new announcement with optional media attachments in a database transaction
- * @param {Object} req.body - Announcement data including title, date, description, and media
- * @returns {Promise<Object>} Created announcement with associated media assets
- * @throws {ZodError} If input validation fails
- * @note Uses database transaction to ensure data consistency
+ * @swagger
+ * /api/announcements:
+ *   post:
+ *     summary: Create a new announcement
+ *     description: Creates a new announcement with optional media attachments in a single transaction.
+ *     tags: [Announcements]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AnnouncementCreate'
+ *     responses:
+ *       201:
+ *         description: Created announcement
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Announcement'
+ *       400:
+ *         description: Invalid request payload
  */
 router.post("/", async (req, res) => {
   const data = AnnouncementCreate.parse(req.body);
@@ -107,20 +127,40 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * @brief PATCH /announcements/:id - Update an existing announcement
- * @details Updates announcement fields and optionally replaces media attachments
- * @param {string} req.params.id - ID of the announcement to update
- * @param {Object} req.body - Partial announcement data to update
- * @returns {Promise<Object>} Updated announcement with associated media assets
- * @throws {ZodError} If input validation fails
- * @note If media is provided, existing media links are deleted and new ones are created
+ * @swagger
+ * /api/announcements/{id}:
+ *   patch:
+ *     summary: Update an existing announcement
+ *     description: Updates announcement fields and optionally replaces media attachments.
+ *     tags: [Announcements]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the announcement to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AnnouncementUpdate'
+ *     responses:
+ *       200:
+ *         description: Updated announcement
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Announcement'
+ *       404:
+ *         description: Announcement not found
  */
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
   const data = AnnouncementUpdate.parse(req.body);
 
   const updated = await prisma.$transaction(async (tx) => {
-    // base fields
     await tx.announcement.update({
       where: { id },
       data: {
@@ -131,7 +171,6 @@ router.patch("/:id", async (req, res) => {
       },
     });
 
-    // if `media` provided, replace links
     if (data.media) {
       await tx.announcementMedia.deleteMany({ where: { announcementId: id } });
       if (data.media.length) {
@@ -160,11 +199,24 @@ router.patch("/:id", async (req, res) => {
 });
 
 /**
- * @brief DELETE /announcements/:id - Delete an announcement
- * @details Permanently removes an announcement and its associated media links
- * @param {string} req.params.id - ID of the announcement to delete
- * @returns {Promise<void>} No content response (204)
- * @note Cascade deletion of media links is handled by database constraints
+ * @swagger
+ * /api/announcements/{id}:
+ *   delete:
+ *     summary: Delete an announcement
+ *     description: Permanently removes an announcement and its associated media links.
+ *     tags: [Announcements]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Announcement ID
+ *     responses:
+ *       204:
+ *         description: Deleted successfully (no content)
+ *       404:
+ *         description: Announcement not found
  */
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
@@ -173,3 +225,83 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Announcement:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         date:
+ *           type: string
+ *           format: date
+ *         title:
+ *           type: string
+ *         desc:
+ *           type: string
+ *           nullable: true
+ *         published:
+ *           type: boolean
+ *         mediaAssets:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/MediaAssetLink'
+ *     MediaAssetLink:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         url:
+ *           type: string
+ *         alt:
+ *           type: string
+ *           nullable: true
+ *         _linkSortOrder:
+ *           type: integer
+ *     AnnouncementCreate:
+ *       type: object
+ *       required: [title, date]
+ *       properties:
+ *         date:
+ *           type: string
+ *           format: date
+ *         title:
+ *           type: string
+ *         desc:
+ *           type: string
+ *           nullable: true
+ *         published:
+ *           type: boolean
+ *         media:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/MediaLink'
+ *     AnnouncementUpdate:
+ *       type: object
+ *       properties:
+ *         date:
+ *           type: string
+ *           format: date
+ *         title:
+ *           type: string
+ *         desc:
+ *           type: string
+ *           nullable: true
+ *         published:
+ *           type: boolean
+ *         media:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/MediaLink'
+ *     MediaLink:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         sortOrder:
+ *           type: integer
+ */
+

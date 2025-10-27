@@ -19,6 +19,13 @@ import type { AuthedRequest } from "../../middleware/requireAdmin";
 const router = Router();
 
 /**
+ * @swagger
+ * tags:
+ *   name: Admin Media
+ *   description: Endpoints for uploading, managing, and deleting media assets (admin only)
+ */
+
+/**
  * @brief Multer disk storage configuration for local development.
  * @details
  * Stores uploads in ./uploads directory. Filenames are timestamped and sanitized.
@@ -49,21 +56,9 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 1
  */
 const MediaTypeEnum = z.enum(["HERO", "MENU", "ANNOUNCEMENT"]);
 
-/**
- * @brief Lowercase media type enum, coerces to uppercase.
- */
 const LowerMediaType = z.enum(["hero", "menu", "announcement"])
   .transform(s => s.toUpperCase() as "HERO" | "MENU" | "ANNOUNCEMENT");
 
-/**
- * @brief Zod schema for creating a media asset.
- * @details
- * - type: Media type (required, case-insensitive)
- * - alt: Alternative text (optional, max 200 chars)
- * - sortOrder: Sort order for UI (default 0)
- * - published: Published flag (default true)
- * - width/height: Dimensions (optional, positive integers)
- */
 const MediaCreate = z.object({
   type: z.union([MediaTypeEnum, LowerMediaType]),
   alt: z.string().max(200).optional().nullable(),
@@ -73,21 +68,33 @@ const MediaCreate = z.object({
   height: z.coerce.number().int().positive().optional(),
 });
 
-/**
- * @brief Zod schema for updating a media asset.
- * @details All fields optional; used for PATCH endpoints.
- */
 const MediaUpdate = MediaCreate.partial();
 
-// --- Routes ---
-
 /**
- * @brief GET /api/admin/media
- * @route GET /
- * @param req.query.type (optional) Filter by media type ("HERO", "MENU", "ANNOUNCEMENT")
- * @returns {Array} All media assets, optionally filtered by type, sorted by type and sortOrder.
- * @details
- * Returns all media assets for admin, including unpublished ones.
+ * @swagger
+ * /api/admin/media:
+ *   get:
+ *     summary: Get all media assets
+ *     description: Returns a list of all media assets, optionally filtered by type. Includes unpublished assets.
+ *     tags: [Admin Media]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [HERO, MENU, ANNOUNCEMENT]
+ *         description: Optional filter by media type
+ *     responses:
+ *       200:
+ *         description: List of media assets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/MediaAsset'
  */
 router.get("/", async (req, res) => {
   const type = req.query.type as string | undefined;
@@ -100,13 +107,51 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * @brief POST /api/admin/media
- * @route POST /
- * @param file (multipart/form-data) The uploaded file (required)
- * @param req.body Fields matching MediaCreate schema
- * @returns {Object} The created media asset record
- * @details
- * Uploads a file and creates a media asset entry in the database. Stores the file in the local uploads directory.
+ * @swagger
+ * /api/admin/media:
+ *   post:
+ *     summary: Upload a new media asset
+ *     description: Uploads a file (multipart/form-data) and creates a corresponding media asset record.
+ *     tags: [Admin Media]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - type
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The uploaded file (image)
+ *               type:
+ *                 type: string
+ *                 description: Media type (HERO, MENU, ANNOUNCEMENT)
+ *               alt:
+ *                 type: string
+ *                 description: Alternative text for accessibility
+ *               sortOrder:
+ *                 type: integer
+ *               published:
+ *                 type: boolean
+ *               width:
+ *                 type: integer
+ *               height:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Created media asset
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MediaAsset'
+ *       400:
+ *         description: Missing file or invalid payload
  */
 router.post("/", upload.single("file"), async (req: AuthedRequest, res) => {
   const parsed = MediaCreate.parse(req.body);
@@ -133,13 +178,34 @@ router.post("/", upload.single("file"), async (req: AuthedRequest, res) => {
 });
 
 /**
- * @brief PATCH /api/admin/media/:id
- * @route PATCH /:id
- * @param req.params.id {string} ID of the media asset to update
- * @param req.body Fields matching MediaUpdate schema
- * @returns {Object} The updated media asset record
- * @details
- * Updates metadata (type, alt, sortOrder, etc) for a media asset. Does not update the file itself.
+ * @swagger
+ * /api/admin/media/{id}:
+ *   patch:
+ *     summary: Update media metadata
+ *     description: Updates metadata for a media asset (type, alt, sortOrder, etc). Does not modify the file.
+ *     tags: [Admin Media]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Media asset ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MediaUpdate'
+ *     responses:
+ *       200:
+ *         description: Updated media asset
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MediaAsset'
  */
 router.patch("/:id", async (req, res) => {
   const { id } = req.params;
@@ -152,18 +218,31 @@ router.patch("/:id", async (req, res) => {
 });
 
 /**
- * @brief DELETE /api/admin/media/:id
- * @route DELETE /:id
- * @param req.params.id {string} ID of the media asset to delete
- * @returns 204 No Content on success
- * @details
- * Deletes a media asset from the database and attempts best-effort cleanup of the associated local file.
+ * @swagger
+ * /api/admin/media/{id}:
+ *   delete:
+ *     summary: Delete a media asset
+ *     description: Deletes a media asset record and removes the corresponding local file (best effort).
+ *     tags: [Admin Media]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Media asset ID
+ *     responses:
+ *       204:
+ *         description: Media deleted successfully (no content)
+ *       404:
+ *         description: Media not found
  */
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   const asset = await prisma.mediaAsset.delete({ where: { id } });
 
-  // Best-effort local file cleanup
   if (asset.key) {
     const p = path.resolve(process.cwd(), "uploads", asset.key);
     fs.promises.unlink(p).catch(() => void 0);
@@ -172,3 +251,52 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     MediaAsset:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [HERO, MENU, ANNOUNCEMENT]
+ *         alt:
+ *           type: string
+ *           nullable: true
+ *         url:
+ *           type: string
+ *         key:
+ *           type: string
+ *         sortOrder:
+ *           type: integer
+ *         published:
+ *           type: boolean
+ *         width:
+ *           type: integer
+ *           nullable: true
+ *         height:
+ *           type: integer
+ *           nullable: true
+ *         createdById:
+ *           type: string
+ *           nullable: true
+ *     MediaUpdate:
+ *       type: object
+ *       properties:
+ *         type:
+ *           type: string
+ *         alt:
+ *           type: string
+ *         sortOrder:
+ *           type: integer
+ *         published:
+ *           type: boolean
+ *         width:
+ *           type: integer
+ *         height:
+ *           type: integer
+ */
