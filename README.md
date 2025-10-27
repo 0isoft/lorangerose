@@ -1,6 +1,6 @@
 # L'Orange Rose Restaurant Management Platform
 A full-stack web application built to power a real restaurant’s public website and admin dashboard.  
-Includes content management (CRUD), image gallery, dynamic menus, and multilingual support.
+Includes content management (CRUD) and multilingual support.
 
 
 ##  Tech Stack
@@ -40,7 +40,7 @@ flowchart LR
   B --> C[(PostgreSQL)]
   B --> D[Prisma ORM]
   B --> E[JWT Auth]
-
+```
 ## **API Overview**
 ### **AdminAnalytics**
 > Endpoints for internal dashboard analytics (requires authentication)
