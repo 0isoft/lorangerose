@@ -34,17 +34,21 @@ Includes content management (CRUD) and multilingual support.
 ## System Architecture
 ```mermaid
 flowchart TB
+
 subgraph Client
   A[React + Vite Frontend]
 end
-subgraph Server["Backend (Node.js + Express)"]
-  B1[Express Router Layer\n(Admin + Public APIs)]
-  B2[Middleware\n(Auth, Rate Limit, Validation)]
-  B3[Prisma ORM\n(Database Access Layer)]
+
+subgraph Server["Backend: Node.js + Express"]
+  B1[Express Router Layer<br/>(Admin + Public APIs)]
+  B2[Middleware<br/>(Auth, Rate Limiting, Validation)]
+  B3[Prisma ORM<br/>(Database Access Layer)]
 end
+
 subgraph Database
   C[(PostgreSQL)]
 end
+
 A -->|RESTful HTTP / JSON| B1
 B1 --> B2
 B2 --> B3
