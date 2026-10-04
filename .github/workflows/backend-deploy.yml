@@ -66,7 +66,11 @@ jobs:
             docker compose -f docker-compose.prod.yml pull || true
             docker compose -f docker-compose.prod.yml up -d
 
-            # pick up updated nginx.conf (MIME types fix)
+            # Ensure renewed certificates are loaded by the long-running container.
+            sudo install -m 0755 ops/certbot-deploy-hook.sh \
+              /etc/letsencrypt/renewal-hooks/deploy/reload-lorangerose-nginx
+
+            # pick up updated nginx.conf and any renewed certificate
             docker compose -f docker-compose.prod.yml restart nginx
         env:
           GHCR_USER: ${{ secrets.GHCR_USER }}
