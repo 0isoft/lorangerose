@@ -1,8 +1,24 @@
 services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   api:
     image: ghcr.io/0isoft/lorangerose-api:latest   # or keep build: if you still build on>
     env_file:
     - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
     command:
     - sh
     - -lc
@@ -16,7 +32,7 @@ services:
         node dist/index.js
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.>exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -39,3 +55,4 @@ services:
 
 volumes:
   uploads:
+  postgres_data:

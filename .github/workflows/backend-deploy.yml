@@ -21,13 +21,16 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Prepare SSH key (from base64)
         shell: bash
         run: |
           echo "$LS_SSH_KEY_B64" | base64 -d > key.pem
-          chmod 644 key.pem
+          chmod 600 key.pem
         env:
           LS_SSH_KEY_B64: ${{ secrets.LS_SSH_KEY_B64 }}
 
@@ -63,15 +66,18 @@ jobs:
             fi
 
             # pull updated images and restart
-            docker compose -f docker-compose.prod.yml pull || true
+            docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d
 
-            # Ensure renewed certificates are loaded by the long-running container.
-            sudo install -m 0755 ops/certbot-deploy-hook.sh \
-              /etc/letsencrypt/renewal-hooks/deploy/reload-lorangerose-nginx
+            # Standalone Certbot needs port 80, so stop nginx for the challenge
+            # and always bring it back after the renewal attempt.
+            sudo install -m 0755 ops/certbot-pre-hook.sh \
+              /etc/letsencrypt/renewal-hooks/pre/stop-lorangerose-nginx
+            sudo install -m 0755 ops/certbot-post-hook.sh \
+              /etc/letsencrypt/renewal-hooks/post/start-lorangerose-nginx
 
             # pick up updated nginx.conf and any renewed certificate
             docker compose -f docker-compose.prod.yml restart nginx
         env:
-          GHCR_USER: ${{ secrets.GHCR_USER }}
-          GHCR_PAT:  ${{ secrets.GHCR_PAT }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT:  ${{ github.token }}
