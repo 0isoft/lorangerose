@@ -14,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node 20
+      - name: Use Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install & Build
         working-directory: frontend
@@ -29,20 +29,12 @@ jobs:
           ls -lah dist
           test -f dist/index.html || (echo "no dist/index.html" && exit 1)
 
-      - name: Prepare SSH key (from base64)
-        shell: bash
-        run: |
-          echo "$LS_SSH_KEY_B64" | base64 -d > key.pem
-          chmod 600 key.pem
-        env:
-          LS_SSH_KEY_B64: ${{ secrets.LS_SSH_KEY_B64 }}
-
       - name: Clean remote site dir
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
-          key_path: key.pem
+          key: ${{ secrets.LS_SSH_KEY }}
           script: |
             mkdir -p /srv/app/site
             rm -rf /srv/app/site/*
@@ -52,7 +44,7 @@ jobs:
         with:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
-          key_path: key.pem
+          key: ${{ secrets.LS_SSH_KEY }}
           source: "frontend/dist/**"
           target: "/srv/app/site"
           strip_components: 2     # <-- unwrap "frontend/dist"
@@ -65,7 +57,7 @@ jobs:
         with:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
-          key_path: key.pem
+          key: ${{ secrets.LS_SSH_KEY }}
           script: |
             ls -lah /srv/app/site | sed -n '1,100p'
             test -f /srv/app/site/index.html || (echo "index.html missing" && exit 1)

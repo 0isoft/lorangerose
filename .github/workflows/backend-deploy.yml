@@ -26,20 +26,12 @@ jobs:
       packages: read
 
     steps:
-      - name: Prepare SSH key (from base64)
-        shell: bash
-        run: |
-          echo "$LS_SSH_KEY_B64" | base64 -d > key.pem
-          chmod 600 key.pem
-        env:
-          LS_SSH_KEY_B64: ${{ secrets.LS_SSH_KEY_B64 }}
-
       - name: Update repo & restart services
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LS_HOST }}
           username: ubuntu
-          key_path: key.pem
+          key: ${{ secrets.LS_SSH_KEY }}
           envs: GHCR_USER,GHCR_PAT
           script: |
             set -e
